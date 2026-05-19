@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Yönetim — Alleyfit Pilates</title>
+  <meta name="robots" content="noindex,nofollow" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=Montserrat:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="../assets/css/base.css" />
+  <link rel="stylesheet" href="../assets/css/components.css" />
+  <link rel="stylesheet" href="../assets/css/layout.css" />
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+
+<div class="navbars-set border-bottom">
+  <div role="banner" class="global-navbar opaque">
+    <a href="../index.html" class="brand">
+      <span class="logo black">Alleyfit · Yönetim</span>
+    </a>
+    <div class="navbar-menu-wrapper">
+      <nav role="navigation" class="inline-nav">
+        <a href="program.html" class="nav-link">Programı Gör</a>
+        <a href="../index.html" class="nav-link">Site</a>
+      </nav>
+      <div class="double-buttons---navbar" id="admin-user-area" hidden>
+        <span id="admin-user-label" class="form-label" style="margin-right: var(--vc-pad-small)"></span>
+        <button type="button" id="admin-signout" class="button-off-black">Çıkış</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ================= LOGIN ================= -->
+<section id="login-section" class="page-title thank-you-page" hidden>
+  <h1 class="h1">Yönetim Girişi</h1>
+  <p class="paragraph-reg">Alleyfit yönetim hesabınla giriş yap.</p>
+</section>
+
+<div id="login-card" class="section-std default-padding" hidden>
+  <div class="contact-form-block" style="max-width: 28rem; margin: 0 auto;">
+    <form id="login-form" class="email-form">
+      <label class="form-label white" for="login-email">E-posta</label>
+      <input class="email-field" type="email" id="login-email" name="email" required autocomplete="email" />
+
+      <label class="form-label white" for="login-password">Parola</label>
+      <input class="email-field" type="password" id="login-password" name="password" required autocomplete="current-password" />
+
+      <div id="login-feedback" class="booking-feedback" hidden></div>
+
+      <div class="double-buttons---margin-top">
+        <button type="submit" class="button-copper" id="login-submit">Giriş Yap</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- ================= DASHBOARD ================= -->
+<section id="dashboard-section" class="page-title thank-you-page" hidden>
+  <h1 class="h1">Rezervasyon Yönetimi</h1>
+  <p class="paragraph-reg" id="dashboard-role-hint">—</p>
+</section>
+
+<div id="dashboard" class="section-std default-padding" hidden>
+
+  <!-- Filtre çubuğu -->
+  <div class="admin-toolbar">
+    <div class="admin-filter">
+      <button type="button" class="admin-filter-btn is-active" data-filter="pending">Bekleyenler</button>
+      <button type="button" class="admin-filter-btn" data-filter="confirmed">Onaylananlar</button>
+      <button type="button" class="admin-filter-btn" data-filter="cancelled">İptal</button>
+      <button type="button" class="admin-filter-btn" data-filter="all">Tümü</button>
+    </div>
+    <div class="admin-actions">
+      <button type="button" id="refresh-btn" class="button-off-black">↻ Yenile</button>
+    </div>
+  </div>
+
+  <!-- Liste -->
+  <div id="bookings-list" class="bookings-list">
+    <div class="schedule-loading"><p class="paragraph-reg">Yükleniyor…</p></div>
+  </div>
+
+  <div id="bookings-empty" class="bookings-empty" hidden>
+    <p class="paragraph-reg">Bu filtrede rezervasyon yok.</p>
+  </div>
+
+  <div id="bookings-error" class="schedule-error" hidden>
+    <p class="paragraph-reg">Rezervasyonlar yüklenemedi. Tekrar dene ya da konsola bak.</p>
+  </div>
+</div>
+
+<div class="footer">
+  <div class="quick-stack-2">
+    <div class="cell-3">
+      <a href="../index.html"><span class="logo black">Alleyfit</span></a>
+    </div>
+    <div class="cell-5">
+      <div class="body white">Yönetim Paneli</div>
+    </div>
+  </div>
+  <section class="sub-footer">
+    <div class="div-block-20">
+      <div class="text-block footer-right">Alleyfit Pilates &copy; 2026</div>
+    </div>
+  </section>
+</div>
+
+<script type="module" src="../assets/js/admin.js"></script>
+</body>
+</html>

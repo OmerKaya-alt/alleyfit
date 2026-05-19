@@ -1,0 +1,123 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    /* Premium feminine palette — warm cream/ivory zemin + warm-dark ink + dusty rose aksan */
+    --vc-bg: #faf6ea;           /* warm cream / ivory — ana zemin (lüks elegant) */
+    --vc-bg-2: #f0e8d0;         /* parchment — muted/secondary surface */
+    --vc-ink: #2a2018;          /* warm-dark — pure siyah değil, sıcak ton */
+    --vc-ink-soft: #4a443c;     /* warm med-grey */
+    --vc-ink-mute: #7a7468;
+    --vc-line: rgba(42, 32, 24, 0.10);
+    --vc-line-strong: rgba(42, 32, 24, 0.22);
+    --vc-accent: #c89889;       /* dusty rose / blush — feminen sanat aksanı */
+    --vc-accent-alt: #a87568;
+
+    /* shadcn token mapping → cream palette */
+    --background: #faf6ea;
+    --foreground: #2a2018;
+    --card: #faf6ea;
+    --card-foreground: #2a2018;
+    --popover: #faf6ea;
+    --popover-foreground: #2a2018;
+    --primary: #2a2018;
+    --primary-foreground: #faf6ea;
+    --secondary: #f0e8d0;
+    --secondary-foreground: #2a2018;
+    --muted: #f0e8d0;
+    --muted-foreground: #4a443c;
+    --accent: #c89889;
+    --accent-foreground: #faf6ea;
+    --destructive: #d04848;
+    --border: rgba(42, 32, 24, 0.10);
+    --input: rgba(42, 32, 24, 0.10);
+    --ring: #4a443c;
+    --radius: 0px;
+
+    /* Layout */
+    --pad-x: clamp(20px, 5vw, 80px);
+    --pad-y: clamp(80px, 12vw, 160px);
+    --max-w: 1440px;
+    --ease: cubic-bezier(0.2, 0.8, 0.2, 1);
+  }
+
+  .dark {
+    --background: #2a2018;
+    --foreground: #faf6ea;
+    --card: #2a2722;
+    --card-foreground: #faf6ea;
+    --popover: #2a2722;
+    --popover-foreground: #faf6ea;
+    --primary: #faf6ea;
+    --primary-foreground: #2a2018;
+    --secondary: #2a2722;
+    --secondary-foreground: #faf6ea;
+    --muted: #2a2722;
+    --muted-foreground: #d4cdb9;
+    --accent: #c89889;
+    --accent-foreground: #2a2018;
+    --destructive: #d04848;
+    --border: rgba(250, 246, 234, 0.12);
+    --input: rgba(250, 246, 234, 0.12);
+    --ring: #d4cdb9;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+@layer base {
+  body {
+    background: var(--vc-bg);
+    color: var(--vc-ink);
+    font-family: "DM Sans", system-ui, -apple-system, sans-serif;
+    font-weight: 400;
+    line-height: 1.55;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+    font-feature-settings: "kern", "ss01";
+  }
+
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    font-family: "DM Sans", system-ui, -apple-system, sans-serif;
+    font-weight: 500;
+    letter-spacing: -0.02em;
+    line-height: 1.05;
+  }
+
+  /* Premium klas dokunuşu — yazı seçildiğinde marka rengi */
+  ::selection {
+    background: var(--vc-ink);
+    color: var(--vc-bg);
+  }
+
+  /* Anchor link'ler tıklanınca pürüzsüz scroll */
+  html {
+    scroll-behavior: smooth;
+  }
+
+  /* Tüm görseller siyah-beyaz vintage feminen estetik — Marilyn dünyası
+     (Hero img'leri inline blur+brightness ekler, B&W base'i bu kuraldan alır) */
+  img {
+    filter: grayscale(0.95) contrast(1.04);
+    transition-property: transform, opacity, filter;
+    transition-timing-function: cubic-bezier(0.2, 0.8, 0.2, 1);
+  }
+}

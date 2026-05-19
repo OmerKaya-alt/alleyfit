@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Program — Alleyfit Pilates</title>
+<meta name="description" content="Alleyfit Pilates haftalık ders programı. Birebir, couple ve grup seanslarımızı inceleyin, dilediğiniz saati online rezerve edin." />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=Montserrat:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="../assets/css/base.css" />
+<link rel="stylesheet" href="../assets/css/components.css" />
+<link rel="stylesheet" href="../assets/css/layout.css" />
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+
+<div class="navbars-set border-bottom">
+  <div class="secondary-navbar-wrapper">
+    <section class="secondary-navbar border-bottom">
+      <div class="div---mt-links">
+        <ul role="list" class="list marianatek-links">
+          <li class="list-item"><a href="program.html" aria-current="page" class="nav-item secondary-nav w--current">Program</a></li>
+          <li class="list-item"><a href="iletisim.html" class="nav-item secondary-nav">İletişim</a></li>
+          <li class="list-item"><a href="admin.html" class="nav-item secondary-nav">Yönetim</a></li>
+        </ul>
+      </div>
+      <div class="div---locales">
+        <div class="locales-wrapper w-locales-list">
+          <div role="list" class="w-locales-items">
+            <div role="listitem" class="w-locales-item"><a hreflang="tr" href="program.html" aria-current="page" class="locale-link w--current">TR</a></div>
+            <div role="listitem" class="w-locales-item"><a hreflang="en" href="#" class="locale-link">EN</a></div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <div role="banner" class="global-navbar opaque">
+    <a href="../index.html" class="brand">
+      <span class="logo black">Alleyfit</span>
+    </a>
+    <div class="navbar-menu-wrapper">
+      <nav role="navigation" class="inline-nav">
+        <a href="hakkimizda.html" class="nav-link">Hakkımızda</a>
+        <a href="dersler.html" class="nav-link">Dersler</a>
+        <a href="../index.html" class="nav-link">Stüdyo</a>
+        <a href="program.html" aria-current="page" class="nav-link w--current">Program</a>
+        <a href="kurumsal.html" class="nav-link">Kurumsal</a>
+        <a href="iletisim.html" class="nav-link">İletişim</a>
+      </nav>
+      <div class="double-buttons---navbar">
+        <a href="#schedule" class="button-copper-nav">Rezervasyon Yap</a>
+      </div>
+      <div class="hamburger-menu-icon"></div>
+    </div>
+  </div>
+</div>
+
+<section class="page-title thank-you-page">
+  <h1 class="h1">Program</h1>
+  <p class="paragraph-reg">Haftalık ders programımıza göz atın, dilediğiniz seansı online rezerve edin.</p>
+</section>
+
+<div id="schedule" class="section-std no-padding-mobile">
+  <div class="mt-embed-wrapper">
+
+    <div id="schedule-week-nav" class="schedule-week-nav">
+      <button type="button" class="button-off-black" data-week-step="-1" aria-label="Önceki hafta">← Önceki hafta</button>
+      <div id="schedule-week-label" class="schedule-week-label" aria-live="polite">—</div>
+      <button type="button" class="button-off-black" data-week-step="1" aria-label="Sonraki hafta">Sonraki hafta →</button>
+    </div>
+
+    <div id="schedule-day-strip" class="schedule-day-strip" role="tablist"></div>
+
+    <div id="schedule-days" class="schedule-days-container">
+      <div class="schedule-loading">
+        <p class="paragraph-reg">Program yükleniyor…</p>
+      </div>
+    </div>
+
+    <div id="schedule-error" class="schedule-error" hidden>
+      <p class="paragraph-reg">Program yüklenemedi. Lütfen sayfayı yenileyin ya da bizimle <a href="iletisim.html">iletişime geçin</a>.</p>
+    </div>
+  </div>
+
+  <div class="section-std img-bg white-text centered cta-padding default-border">
+    <h2 class="h2 no-margin">Bültenimize Katılın</h2>
+    <p class="paragraph-reg">Yeni dönem programları ve kampanyalardan ilk siz haberdar olun.</p>
+    <div class="newsletter-form">
+      <form name="email-form" method="get" class="email-form">
+        <input class="email-field" maxlength="256" name="email" placeholder="E-posta adresiniz" type="email" required />
+        <input type="submit" class="newsletter-form-submit white-border-except-left" value="Gönder" />
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- ================= BOOKING MODAL ================= -->
+<div id="booking-modal" class="modal" hidden aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="booking-modal-title">
+  <div class="modal-backdrop" data-modal-close></div>
+  <div class="modal-card">
+    <button type="button" class="modal-close" data-modal-close aria-label="Kapat">×</button>
+
+    <div class="modal-header">
+      <div class="h6">Rezervasyon Talebi</div>
+      <h2 id="booking-modal-title" class="h2 no-margin">Seans bilgileri</h2>
+      <div id="booking-slot-summary" class="modal-summary">—</div>
+    </div>
+
+    <form id="booking-form" class="booking-form">
+      <input type="hidden" name="slot_id" id="booking-slot-id" />
+
+      <label class="form-label" for="booking-name">Ad Soyad</label>
+      <input class="email-field" type="text" id="booking-name" name="name" required minlength="3" maxlength="80" autocomplete="name" />
+
+      <label class="form-label" for="booking-phone">Telefon (WhatsApp)</label>
+      <input class="email-field" type="tel" id="booking-phone" name="phone" required pattern="[0-9 +]{7,20}" placeholder="0532 000 00 00" autocomplete="tel" />
+
+      <label class="form-label" for="booking-email">E-posta (opsiyonel)</label>
+      <input class="email-field" type="email" id="booking-email" name="email" autocomplete="email" />
+
+      <div id="booking-participant-row" hidden>
+        <label class="form-label" for="booking-participant-count">Katılımcı sayısı</label>
+        <input class="email-field" type="number" id="booking-participant-count" name="participant_count" min="1" max="12" value="1" />
+      </div>
+
+      <label class="form-label" for="booking-notes">Not (opsiyonel)</label>
+      <textarea class="email-field" id="booking-notes" name="notes" rows="3" maxlength="400" placeholder="Sağlık durumu, deneyim seviyesi, vb."></textarea>
+
+      <div id="booking-feedback" class="booking-feedback" hidden></div>
+
+      <div class="double-buttons---margin-top">
+        <button type="submit" class="button-copper" id="booking-submit">Talebi Gönder</button>
+        <button type="button" class="button-off-black" data-modal-close>Vazgeç</button>
+      </div>
+
+      <p class="modal-fineprint">Talebiniz alındığında ekibimiz en kısa sürede WhatsApp üzerinden geri dönüş yapacak.</p>
+    </form>
+  </div>
+</div>
+
+<div class="footer">
+  <div class="quick-stack-2">
+    <div class="cell-3">
+      <a href="../index.html"><span class="logo black">Alleyfit</span></a>
+    </div>
+    <div class="cell-5">
+      <div class="main-footer-links">
+        <a href="hakkimizda.html" class="link main-footer-links">Hakkımızda</a>
+        <a href="dersler.html" class="link main-footer-links">Dersler</a>
+        <a href="kurumsal.html" class="link main-footer-links">Kurumsal</a>
+      </div>
+      <div class="main-footer-links">
+        <a href="program.html" class="link main-footer-links">Program</a>
+        <a href="iletisim.html" class="link main-footer-links">İletişim</a>
+        <a href="../index.html" class="link main-footer-links">Stüdyo</a>
+      </div>
+    </div>
+    <div class="cell-13">
+      <div class="body white">Halaskargazi Cd. No:1<br />34371 Şişli / İstanbul</div>
+      <div class="spacer-vertical-medium"></div>
+      <div class="div-block-25">
+        <div class="div-block-6">
+          <a href="#" target="_blank" rel="noopener" aria-label="Instagram" class="footer-social-link">IG</a>
+          <a href="#" target="_blank" rel="noopener" aria-label="Facebook" class="footer-social-link">FB</a>
+          <a href="#" target="_blank" rel="noopener" aria-label="TikTok" class="footer-social-link">TK</a>
+          <a href="#" target="_blank" rel="noopener" aria-label="YouTube" class="footer-social-link">YT</a>
+        </div>
+      </div>
+    </div>
+    <div class="cell-14">
+      <div class="form-label white">Bültenimize abone olun</div>
+      <div class="newsletter-form">
+        <form name="email-form" method="post" class="email-form">
+          <input class="email-field" maxlength="256" name="email" placeholder="E-posta adresiniz" type="email" required />
+          <input type="submit" class="newsletter-form-submit white-border-except-left" value="Gönder" />
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <section class="sub-footer">
+    <div class="legal-links">
+      <a href="#" class="link legal-links">Kullanım Şartları</a>
+      <a href="#" class="link legal-links">Gizlilik Politikası</a>
+      <a href="#" class="link legal-links">KVKK</a>
+    </div>
+    <div class="div-block-20">
+      <div class="text-block footer-right">Alleyfit Pilates &copy; 2026</div>
+      <div class="text-block footer-right">Tüm hakları saklıdır.</div>
+    </div>
+  </section>
+</div>
+
+<script src="../assets/js/main.js" defer></script>
+<script type="module" src="../assets/js/program.js"></script>
+</body>
+</html>
