@@ -211,17 +211,12 @@ export default function Nav() {
           aria-label="Alleyfit Wellness Studio - Anasayfa"
         >
           {!logoFailed ? (
-            <>
-              <img
-                src="/logo.jpg"
-                alt="Alleyfit Wellness Studio"
-                className="hidden h-12 w-auto object-contain sm:block sm:h-20"
-                onError={() => setLogoFailed(true)}
-              />
-              <span className="sm:hidden">
-                <BrandMark compact />
-              </span>
-            </>
+            <img
+              src="/logo.jpg"
+              alt="Alleyfit Wellness Studio"
+              className="h-11 w-auto object-contain sm:h-20"
+              onError={() => setLogoFailed(true)}
+            />
           ) : (
             <BrandMark />
           )}
