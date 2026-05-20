@@ -120,19 +120,48 @@ export default function Admin() {
 
 function LoginScreen({ unauthorizedEmail }: { unauthorizedEmail: string | null }) {
   const [emailInput, setEmailInput] = useState("");
-  const [sent, setSent] = useState(false);
+  const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
+  const [linkSent, setLinkSent] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  async function handleSubmit(e: FormEvent<HTMLFormElement>) {
-    e.preventDefault();
-    setError(null);
-    if (!supabase) return;
+  /** E-posta admin listesinde mi? Değilse hata yazıp null döner. */
+  function validEmail(): string | null {
     const trimmed = emailInput.trim().toLowerCase();
     if (!ADMIN_EMAILS.includes(trimmed)) {
       setError("Bu e-posta admin listesinde yok.");
+      return null;
+    }
+    return trimmed;
+  }
+
+  // Şifreyle giriş — anında, e-posta gönderilmez.
+  async function handlePasswordLogin(e: FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+    setError(null);
+    setLinkSent(false);
+    if (!supabase) return;
+    const trimmed = validEmail();
+    if (!trimmed) return;
+    setLoading(true);
+    const { error: err } = await supabase.auth.signInWithPassword({
+      email: trimmed,
+      password,
+    });
+    setLoading(false);
+    if (err) {
+      setError("E-posta veya şifre hatalı.");
       return;
     }
+    // Başarılı → onAuthStateChange panel açar.
+  }
+
+  // Magic-link — e-posta ile giriş bağlantısı (yedek yöntem).
+  async function handleMagicLink() {
+    setError(null);
+    if (!supabase) return;
+    const trimmed = validEmail();
+    if (!trimmed) return;
     setLoading(true);
     const { error: err } = await supabase.auth.signInWithOtp({
       email: trimmed,
@@ -143,7 +172,7 @@ function LoginScreen({ unauthorizedEmail }: { unauthorizedEmail: string | null }
       setError(err.message);
       return;
     }
-    setSent(true);
+    setLinkSent(true);
   }
 
   return (
@@ -156,7 +185,7 @@ function LoginScreen({ unauthorizedEmail }: { unauthorizedEmail: string | null }
           Yönetim paneline gir.
         </h1>
         <p className="text-foreground/60 mt-4">
-          E-posta adresini gir; giriş bağlantısını e-posta ile gönderelim. Şifre gerekmez.
+          E-posta ve şifrenle giriş yap. Şifren yoksa e-posta ile giriş bağlantısı alabilirsin.
         </p>
 
         {unauthorizedEmail ? (
@@ -165,47 +194,60 @@ function LoginScreen({ unauthorizedEmail }: { unauthorizedEmail: string | null }
           </p>
         ) : null}
 
-        {sent ? (
-          <div className="mt-8 border border-vc-accent/40 bg-vc-accent/10 px-6 py-6">
-            <p className="font-medium text-foreground">Giriş bağlantısı gönderildi.</p>
-            <p className="text-sm text-foreground/70 mt-2 leading-relaxed">
-              <strong>{emailInput.trim().toLowerCase()}</strong> adresine bir e-posta gönderdik.
-              E-postadaki “Giriş Yap” bağlantısına <strong>bu cihazdan</strong> tıkla — panel
-              otomatik açılır. Gelen kutunda yoksa spam/gereksiz klasörüne bak.
+        <form onSubmit={handlePasswordLogin} className="mt-8 space-y-4">
+          <label className="block">
+            <span className="text-[0.7rem] uppercase tracking-[0.22em] text-vc-accent">E-POSTA</span>
+            <input
+              type="email"
+              required
+              value={emailInput}
+              onChange={(e) => setEmailInput(e.target.value)}
+              placeholder="aleynavrmaz@gmail.com"
+              className="mt-2 w-full bg-transparent border-b border-foreground/30 py-3 focus:border-foreground outline-none transition"
+            />
+          </label>
+          <label className="block">
+            <span className="text-[0.7rem] uppercase tracking-[0.22em] text-vc-accent">ŞİFRE</span>
+            <input
+              type="password"
+              required
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              placeholder="••••••••"
+              className="mt-2 w-full bg-transparent border-b border-foreground/30 py-3 focus:border-foreground outline-none transition"
+            />
+          </label>
+
+          {error && <p className="text-sm text-destructive">{error}</p>}
+          {linkSent && (
+            <p className="text-sm text-vc-accent">
+              Giriş bağlantısı e-postana gönderildi. Bağlantıya bu cihazdan tıkla.
             </p>
-            <button
-              onClick={() => {
-                setSent(false);
-                setError(null);
-              }}
-              className="mt-4 text-[0.72rem] uppercase tracking-[0.18em] text-foreground/60 hover:text-foreground transition"
-            >
-              Tekrar gönder
-            </button>
-          </div>
-        ) : (
-          <form onSubmit={handleSubmit} className="mt-8 space-y-4">
-            <label className="block">
-              <span className="text-[0.7rem] uppercase tracking-[0.22em] text-vc-accent">E-POSTA</span>
-              <input
-                type="email"
-                required
-                value={emailInput}
-                onChange={(e) => setEmailInput(e.target.value)}
-                placeholder="aleynavrmaz@gmail.com"
-                className="mt-2 w-full bg-transparent border-b border-foreground/30 py-3 focus:border-foreground outline-none transition"
-              />
-            </label>
-            {error && <p className="text-sm text-destructive">{error}</p>}
-            <button
-              type="submit"
-              disabled={loading}
-              className="w-full rounded-none bg-foreground text-background px-7 py-4 text-[0.78rem] uppercase tracking-[0.18em] font-medium hover:opacity-90 disabled:opacity-50 transition"
-            >
-              {loading ? "Gönderiliyor…" : "Giriş Bağlantısı Gönder"}
-            </button>
-          </form>
-        )}
+          )}
+
+          <button
+            type="submit"
+            disabled={loading}
+            className="w-full rounded-none bg-foreground text-background px-7 py-4 text-[0.78rem] uppercase tracking-[0.18em] font-medium hover:opacity-90 disabled:opacity-50 transition"
+          >
+            {loading ? "Lütfen bekle…" : "Giriş Yap"}
+          </button>
+        </form>
+
+        <div className="mt-6 flex items-center gap-3 text-foreground/30">
+          <span className="h-px flex-1 bg-border" />
+          <span className="text-[0.62rem] uppercase tracking-[0.22em]">veya</span>
+          <span className="h-px flex-1 bg-border" />
+        </div>
+
+        <button
+          type="button"
+          onClick={handleMagicLink}
+          disabled={loading}
+          className="mt-6 w-full rounded-none border border-foreground/30 px-7 py-4 text-[0.78rem] uppercase tracking-[0.18em] font-medium hover:border-foreground disabled:opacity-50 transition"
+        >
+          E-posta ile giriş bağlantısı gönder
+        </button>
 
         <p className="mt-10 text-[0.7rem] uppercase tracking-[0.22em] text-foreground/40">
           <Link to="/" className="hover:text-foreground transition">← Anasayfaya dön</Link>
