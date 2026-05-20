@@ -120,7 +120,7 @@ export default function Admin() {
 
 function LoginScreen({ unauthorizedEmail }: { unauthorizedEmail: string | null }) {
   const [emailInput, setEmailInput] = useState("");
-  const [password, setPassword] = useState("");
+  const [sent, setSent] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -134,16 +134,16 @@ function LoginScreen({ unauthorizedEmail }: { unauthorizedEmail: string | null }
       return;
     }
     setLoading(true);
-    const { error: err } = await supabase.auth.signInWithPassword({
+    const { error: err } = await supabase.auth.signInWithOtp({
       email: trimmed,
-      password,
+      options: { emailRedirectTo: window.location.origin + "/admin" },
     });
     setLoading(false);
     if (err) {
-      setError("E-posta veya şifre hatalı.");
+      setError(err.message);
       return;
     }
-    // Başarılı → onAuthStateChange tetiklenir, panel otomatik açılır.
+    setSent(true);
   }
 
   return (
@@ -156,7 +156,7 @@ function LoginScreen({ unauthorizedEmail }: { unauthorizedEmail: string | null }
           Yönetim paneline gir.
         </h1>
         <p className="text-foreground/60 mt-4">
-          E-posta ve şifrenle giriş yap.
+          E-posta adresini gir; giriş bağlantısını e-posta ile gönderelim. Şifre gerekmez.
         </p>
 
         {unauthorizedEmail ? (
@@ -165,38 +165,47 @@ function LoginScreen({ unauthorizedEmail }: { unauthorizedEmail: string | null }
           </p>
         ) : null}
 
-        <form onSubmit={handleSubmit} className="mt-8 space-y-4">
-          <label className="block">
-            <span className="text-[0.7rem] uppercase tracking-[0.22em] text-vc-accent">E-POSTA</span>
-            <input
-              type="email"
-              required
-              value={emailInput}
-              onChange={(e) => setEmailInput(e.target.value)}
-              placeholder="aleynavrmaz@gmail.com"
-              className="mt-2 w-full bg-transparent border-b border-foreground/30 py-3 focus:border-foreground outline-none transition"
-            />
-          </label>
-          <label className="block">
-            <span className="text-[0.7rem] uppercase tracking-[0.22em] text-vc-accent">ŞİFRE</span>
-            <input
-              type="password"
-              required
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              placeholder="••••••••"
-              className="mt-2 w-full bg-transparent border-b border-foreground/30 py-3 focus:border-foreground outline-none transition"
-            />
-          </label>
-          {error && <p className="text-sm text-destructive">{error}</p>}
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full rounded-none bg-foreground text-background px-7 py-4 text-[0.78rem] uppercase tracking-[0.18em] font-medium hover:opacity-90 disabled:opacity-50 transition"
-          >
-            {loading ? "Giriş yapılıyor…" : "Giriş Yap"}
-          </button>
-        </form>
+        {sent ? (
+          <div className="mt-8 border border-vc-accent/40 bg-vc-accent/10 px-6 py-6">
+            <p className="font-medium text-foreground">Giriş bağlantısı gönderildi.</p>
+            <p className="text-sm text-foreground/70 mt-2 leading-relaxed">
+              <strong>{emailInput.trim().toLowerCase()}</strong> adresine bir e-posta gönderdik.
+              E-postadaki “Giriş Yap” bağlantısına <strong>bu cihazdan</strong> tıkla — panel
+              otomatik açılır. Gelen kutunda yoksa spam/gereksiz klasörüne bak.
+            </p>
+            <button
+              onClick={() => {
+                setSent(false);
+                setError(null);
+              }}
+              className="mt-4 text-[0.72rem] uppercase tracking-[0.18em] text-foreground/60 hover:text-foreground transition"
+            >
+              Tekrar gönder
+            </button>
+          </div>
+        ) : (
+          <form onSubmit={handleSubmit} className="mt-8 space-y-4">
+            <label className="block">
+              <span className="text-[0.7rem] uppercase tracking-[0.22em] text-vc-accent">E-POSTA</span>
+              <input
+                type="email"
+                required
+                value={emailInput}
+                onChange={(e) => setEmailInput(e.target.value)}
+                placeholder="aleynavrmaz@gmail.com"
+                className="mt-2 w-full bg-transparent border-b border-foreground/30 py-3 focus:border-foreground outline-none transition"
+              />
+            </label>
+            {error && <p className="text-sm text-destructive">{error}</p>}
+            <button
+              type="submit"
+              disabled={loading}
+              className="w-full rounded-none bg-foreground text-background px-7 py-4 text-[0.78rem] uppercase tracking-[0.18em] font-medium hover:opacity-90 disabled:opacity-50 transition"
+            >
+              {loading ? "Gönderiliyor…" : "Giriş Bağlantısı Gönder"}
+            </button>
+          </form>
+        )}
 
         <p className="mt-10 text-[0.7rem] uppercase tracking-[0.22em] text-foreground/40">
           <Link to="/" className="hover:text-foreground transition">← Anasayfaya dön</Link>
