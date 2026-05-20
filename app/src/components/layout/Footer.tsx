@@ -181,11 +181,17 @@ export default function Footer() {
           <div className="col-span-12 md:col-span-4">
             <h4 className={colTitle}>{t("footer.contact")}</h4>
 
-            <address className="not-italic mt-4 font-serif text-[1.05rem] leading-relaxed text-background/85">
-              Şile Merkez
-              <br />
-              İstanbul
-            </address>
+            <a
+              href="https://www.google.com/maps/search/?api=1&query=%C3%87avu%C5%9F%20Mah.%20%C3%9Csk%C3%BCdar%20Cd.%20204C%20BLOK%2C%2034980%20%C5%9Eile%2F%C4%B0stanbul"
+              target="_blank"
+              rel="noreferrer"
+            >
+              <address className="not-italic mt-4 font-serif text-[1.05rem] leading-relaxed text-background/85 hover:text-background transition">
+                Çavuş Mah. Üsküdar Cd. 204C BLOK
+                <br />
+                34980 Şile / İstanbul
+              </address>
+            </a>
 
             <a
               href="tel:+905366711793"

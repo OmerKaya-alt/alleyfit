@@ -66,7 +66,7 @@ export const images = {
     prenatal: u(ID.womanCalm, 1200),
     private: u(ID.womanStretch, 1200),
     studio1: u(ID.pilatesStudio, 1200),
-    studio2: "/photos/story.svg",
+    studio2: u(ID.pilatesReformer, 1200),
     standards: u(ID.womanYoga, 1200),
   },
   square: {

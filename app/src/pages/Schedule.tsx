@@ -220,12 +220,13 @@ export default function Schedule() {
               <button
                 onClick={() => setActiveDayIdx((i) => Math.max(0, i - 1))}
                 disabled={activeDayIdx === 0}
-                className="px-4 border-r border-foreground/10 hover:bg-muted disabled:opacity-30 transition"
+                className="shrink-0 px-3 sm:px-4 border-r border-foreground/10 hover:bg-muted disabled:opacity-30 transition"
                 aria-label="prev"
               >
                 <ChevronLeft strokeWidth={1.5} className="w-4 h-4" />
               </button>
-              <div className="flex-1 grid grid-cols-7 divide-x divide-foreground/10">
+              {/* Mobil: yatay kaydırılır, her gün rahat genişlikte. md+: 7'li grid. */}
+              <div className="flex flex-1 overflow-x-auto divide-x divide-foreground/10 [-ms-overflow-style:none] [scrollbar-width:none] md:grid md:grid-cols-7 md:overflow-visible">
                 {days.map((d, i) => {
                   const isActive = i === activeDayIdx;
                   const dow = dayOfWeek(d);
@@ -235,14 +236,14 @@ export default function Schedule() {
                       key={d}
                       onClick={() => setActiveDayIdx(i)}
                       className={cn(
-                        "py-4 px-2 flex flex-col items-center justify-center transition",
+                        "flex min-w-[4rem] flex-1 flex-col items-center justify-center gap-1 px-2 py-3.5 transition md:min-w-0",
                         isActive ? "bg-foreground text-background" : "hover:bg-muted",
                       )}
                     >
-                      <span className="text-[0.65rem] uppercase tracking-[0.22em] opacity-70">
+                      <span className="whitespace-nowrap text-[0.65rem] uppercase tracking-[0.18em] opacity-70">
                         {formatDateShort(d)}
                       </span>
-                      <span className="font-serif text-[1.1rem] tracking-[-0.01em] mt-1">
+                      <span className="whitespace-nowrap font-serif text-[1.1rem] tracking-[-0.01em]">
                         {labels[dow]}
                       </span>
                     </button>
@@ -252,7 +253,7 @@ export default function Schedule() {
               <button
                 onClick={() => setActiveDayIdx((i) => Math.min(days.length - 1, i + 1))}
                 disabled={activeDayIdx === days.length - 1}
-                className="px-4 border-l border-foreground/10 hover:bg-muted disabled:opacity-30 transition"
+                className="shrink-0 px-3 sm:px-4 border-l border-foreground/10 hover:bg-muted disabled:opacity-30 transition"
                 aria-label="next"
               >
                 <ChevronRight strokeWidth={1.5} className="w-4 h-4" />

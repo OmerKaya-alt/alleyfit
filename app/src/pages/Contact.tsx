@@ -4,6 +4,15 @@ import Reveal from "@/components/motion/Reveal";
 import { images } from "@/data/images";
 import { useLang } from "@/lib/lang";
 
+// Stüdyonun açık adresi — harita embed'i ve "yol tarifi" linki bununla beslenir.
+const STUDIO_ADDRESS = "Çavuş Mah. Üsküdar Cd. 204C BLOK, 34980 Şile/İstanbul";
+const MAP_EMBED_SRC = `https://maps.google.com/maps?q=${encodeURIComponent(
+  STUDIO_ADDRESS,
+)}&z=16&output=embed`;
+const MAP_LINK = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
+  STUDIO_ADDRESS,
+)}`;
+
 export default function Contact() {
   const { t } = useLang();
 
@@ -29,7 +38,7 @@ export default function Contact() {
           <Reveal>
             <div className="aspect-[4/3] lg:aspect-[3/4] overflow-hidden bg-muted">
               <iframe
-                src="https://maps.google.com/maps?q=ALLEYF%C4%B0T%20P%C4%B0LATES%20STUD%C4%B0O%20%C5%9Eile&t=&z=15&ie=UTF8&iwloc=&output=embed"
+                src={MAP_EMBED_SRC}
                 width="100%"
                 height="100%"
                 loading="lazy"
@@ -50,7 +59,14 @@ export default function Contact() {
                 <MapPin strokeWidth={1.5} className="w-5 h-5 mt-1 text-foreground/60 shrink-0" />
                 <div>
                   <span className="text-[0.7rem] uppercase tracking-[0.22em] text-vc-accent">{t("contact.address")}</span>
-                  <p className="font-serif text-[1.2rem] tracking-[-0.01em] mt-1">{t("contact.addressLine1")}<br/>{t("contact.addressLine2")}</p>
+                  <a
+                    href={MAP_LINK}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="block font-serif text-[1.2rem] tracking-[-0.01em] mt-1 hover:opacity-70 transition"
+                  >
+                    {t("contact.addressLine1")}<br />{t("contact.addressLine2")}
+                  </a>
                 </div>
               </li>
               <li className="flex items-start gap-4">
