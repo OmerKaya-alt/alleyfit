@@ -205,22 +205,46 @@ export default function Nav() {
       {/* Mobil: logo solda · hamburger sağda — ortası boş, dengeli.
           Masaüstü: logo solda · menü tam ortada · sosyal+dil sağda. */}
       <div className="relative mx-auto flex h-16 w-full max-w-[1440px] items-center justify-between gap-3 px-4 sm:px-6 md:h-24 md:px-8">
-        <Link
-          to="/"
-          className="flex min-w-0 shrink items-center hover:opacity-85 transition-opacity"
-          aria-label="Alleyfit Wellness Studio - Anasayfa"
-        >
-          {!logoFailed ? (
-            <img
-              src="/logo.jpg"
-              alt="Alleyfit Wellness Studio"
-              className="h-11 w-auto object-contain sm:h-20"
-              onError={() => setLogoFailed(true)}
-            />
-          ) : (
-            <BrandMark />
-          )}
-        </Link>
+        {/* Sol grup: logo + (yalnızca mobilde) WhatsApp / Instagram */}
+        <div className="flex min-w-0 items-center gap-2 sm:gap-3">
+          <Link
+            to="/"
+            className="flex min-w-0 shrink items-center hover:opacity-85 transition-opacity"
+            aria-label="Alleyfit Wellness Studio - Anasayfa"
+          >
+            {!logoFailed ? (
+              <img
+                src="/logo.jpg"
+                alt="Alleyfit Wellness Studio"
+                className="h-11 w-auto object-contain sm:h-20"
+                onError={() => setLogoFailed(true)}
+              />
+            ) : (
+              <BrandMark />
+            )}
+          </Link>
+
+          <div className="flex shrink-0 items-center gap-0.5 md:hidden">
+            <a
+              href={WHATSAPP_HREF}
+              target="_blank"
+              rel="noreferrer"
+              aria-label="WhatsApp ile iletişim"
+              className="inline-flex h-9 w-9 items-center justify-center"
+            >
+              <WhatsAppGlyph className="h-[22px] w-[22px]" />
+            </a>
+            <a
+              href={INSTAGRAM_HREF}
+              target="_blank"
+              rel="noreferrer"
+              aria-label="Instagram"
+              className="inline-flex h-9 w-9 items-center justify-center"
+            >
+              <InstagramGlyph className="h-[22px] w-[22px]" />
+            </a>
+          </div>
+        </div>
 
         <nav
           className="absolute left-1/2 hidden -translate-x-1/2 items-center gap-x-6 md:flex lg:gap-x-9"
