@@ -13,8 +13,9 @@ create table if not exists public.admin_emails (
 );
 
 insert into public.admin_emails (email) values
-  ('alleynavrmaz@gmail.com'),
-  ('omrkya@gmail.com')
+  ('aleynavrmaz@gmail.com'),
+  ('omerfb2144@gmail.com'),
+  ('kmsoftwaretech@gmail.com')
 on conflict (email) do nothing;
 
 -- ---------------------------------------------------------------------
@@ -204,7 +205,7 @@ on conflict (slug) do nothing;
 -- 8) SEED DATA — Eğitmenler
 -- ---------------------------------------------------------------------
 insert into public.instructors (id, name, role, email, color, active) values
-  ('11111111-1111-1111-1111-111111111111', 'Aleyna Vurmaz', 'Reformer · Mat · Cadillac · Spinning · Prenatal · Özel', 'alleynavrmaz@gmail.com', '#c89889', true),
+  ('11111111-1111-1111-1111-111111111111', 'Aleyna Vurmaz', 'Reformer · Mat · Cadillac · Spinning · Prenatal · Özel', 'aleynavrmaz@gmail.com', '#c89889', true),
   ('22222222-2222-2222-2222-222222222222', 'Ayşenur Kılıçarslan', 'Beslenme Danışmanı', null, '#a87568', true)
 on conflict (id) do nothing;
 

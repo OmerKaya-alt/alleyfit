@@ -194,10 +194,10 @@ export default function Footer() {
               +90 536 671 17 93
             </a>
             <a
-              href="mailto:merhaba@alleyfit.com"
+              href="mailto:aleynavrmaz@gmail.com"
               className="block text-[0.92rem] text-background/80 hover:text-background transition"
             >
-              merhaba@alleyfit.com
+              aleynavrmaz@gmail.com
             </a>
 
             <div className="mt-6 flex gap-3">
@@ -229,7 +229,7 @@ export default function Footer() {
                 <MessageCircle size={16} strokeWidth={1.5} aria-hidden="true" />
               </a>
               <a
-                href="mailto:merhaba@alleyfit.com"
+                href="mailto:aleynavrmaz@gmail.com"
                 aria-label="E-posta"
                 className={socialBtn}
               >

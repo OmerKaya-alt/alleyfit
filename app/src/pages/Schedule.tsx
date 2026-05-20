@@ -442,7 +442,15 @@ function ReserveModal({
     setError(null);
     setSubmitting(true);
 
-    if (supabase) {
+    // Şablon (fallback) slot id'si "tpl-" ile başlar — DB'de gerçek kaydı yok,
+    // Supabase'e yazılamaz. Yalnızca admin panelinden girilen gerçek (UUID)
+    // slotlar reservations tablosuna kaydedilir; şablon slotlar WhatsApp'tan gider.
+    const isRealSlot = !slot.id.startsWith("tpl-");
+
+    // Pending kaydı sisteme yazmaya çalış. Başarısız olsa bile WhatsApp akışı
+    // engellenmez — rezervasyonun gerçek onayı zaten WhatsApp üzerinden yapılıyor,
+    // DB kaydı yalnızca admin paneli için bir kolaylık. Hata konsola düşer.
+    if (supabase && isRealSlot) {
       const { error: err } = await supabase.from("reservations").insert({
         slot_id: slot.id,
         member_name: name.trim(),
@@ -451,13 +459,7 @@ function ReserveModal({
         status: "pending",
       });
       if (err) {
-        setError(
-          lang === "tr"
-            ? "Bir hata oluştu, lütfen WhatsApp ile iletişime geçin."
-            : "An error occurred, please contact us on WhatsApp.",
-        );
-        setSubmitting(false);
-        return;
+        console.error("Rezervasyon kaydı yazılamadı:", err.message, err);
       }
     }
 

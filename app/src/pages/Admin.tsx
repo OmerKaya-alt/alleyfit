@@ -120,7 +120,8 @@ export default function Admin() {
 
 function LoginScreen({ unauthorizedEmail }: { unauthorizedEmail: string | null }) {
   const [emailInput, setEmailInput] = useState("");
-  const [sent, setSent] = useState(false);
+  const [password, setPassword] = useState("");
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   async function handleSubmit(e: FormEvent<HTMLFormElement>) {
@@ -132,12 +133,17 @@ function LoginScreen({ unauthorizedEmail }: { unauthorizedEmail: string | null }
       setError("Bu e-posta admin listesinde yok.");
       return;
     }
-    const { error: err } = await supabase.auth.signInWithOtp({
+    setLoading(true);
+    const { error: err } = await supabase.auth.signInWithPassword({
       email: trimmed,
-      options: { emailRedirectTo: window.location.origin + "/admin" },
+      password,
     });
-    if (err) setError(err.message);
-    else setSent(true);
+    setLoading(false);
+    if (err) {
+      setError("E-posta veya şifre hatalı.");
+      return;
+    }
+    // Başarılı → onAuthStateChange tetiklenir, panel otomatik açılır.
   }
 
   return (
@@ -150,7 +156,7 @@ function LoginScreen({ unauthorizedEmail }: { unauthorizedEmail: string | null }
           Yönetim paneline gir.
         </h1>
         <p className="text-foreground/60 mt-4">
-          E-posta adresine bir giriş bağlantısı göndereceğiz. Tıklayarak panele girersin.
+          E-posta ve şifrenle giriş yap.
         </p>
 
         {unauthorizedEmail ? (
@@ -159,35 +165,38 @@ function LoginScreen({ unauthorizedEmail }: { unauthorizedEmail: string | null }
           </p>
         ) : null}
 
-        {sent ? (
-          <div className="mt-8 p-6 border border-vc-accent/50 bg-vc-accent/10">
-            <p className="text-foreground font-medium">Bağlantı gönderildi.</p>
-            <p className="text-foreground/70 text-sm mt-2">
-              E-postanı kontrol et ve “Giriş Yap” bağlantısına tıkla. Spam klasörüne de bak.
-            </p>
-          </div>
-        ) : (
-          <form onSubmit={handleSubmit} className="mt-8 space-y-4">
-            <label className="block">
-              <span className="text-[0.7rem] uppercase tracking-[0.22em] text-vc-accent">E-POSTA</span>
-              <input
-                type="email"
-                required
-                value={emailInput}
-                onChange={(e) => setEmailInput(e.target.value)}
-                placeholder="alleynavrmaz@gmail.com"
-                className="mt-2 w-full bg-transparent border-b border-foreground/30 py-3 focus:border-foreground outline-none transition"
-              />
-            </label>
-            {error && <p className="text-sm text-destructive">{error}</p>}
-            <button
-              type="submit"
-              className="w-full rounded-none bg-foreground text-background px-7 py-4 text-[0.78rem] uppercase tracking-[0.18em] font-medium hover:opacity-90 transition"
-            >
-              Bağlantıyı Gönder
-            </button>
-          </form>
-        )}
+        <form onSubmit={handleSubmit} className="mt-8 space-y-4">
+          <label className="block">
+            <span className="text-[0.7rem] uppercase tracking-[0.22em] text-vc-accent">E-POSTA</span>
+            <input
+              type="email"
+              required
+              value={emailInput}
+              onChange={(e) => setEmailInput(e.target.value)}
+              placeholder="aleynavrmaz@gmail.com"
+              className="mt-2 w-full bg-transparent border-b border-foreground/30 py-3 focus:border-foreground outline-none transition"
+            />
+          </label>
+          <label className="block">
+            <span className="text-[0.7rem] uppercase tracking-[0.22em] text-vc-accent">ŞİFRE</span>
+            <input
+              type="password"
+              required
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              placeholder="••••••••"
+              className="mt-2 w-full bg-transparent border-b border-foreground/30 py-3 focus:border-foreground outline-none transition"
+            />
+          </label>
+          {error && <p className="text-sm text-destructive">{error}</p>}
+          <button
+            type="submit"
+            disabled={loading}
+            className="w-full rounded-none bg-foreground text-background px-7 py-4 text-[0.78rem] uppercase tracking-[0.18em] font-medium hover:opacity-90 disabled:opacity-50 transition"
+          >
+            {loading ? "Giriş yapılıyor…" : "Giriş Yap"}
+          </button>
+        </form>
 
         <p className="mt-10 text-[0.7rem] uppercase tracking-[0.22em] text-foreground/40">
           <Link to="/" className="hover:text-foreground transition">← Anasayfaya dön</Link>

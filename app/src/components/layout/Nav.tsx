@@ -1,4 +1,4 @@
-import { useEffect, useState, type SVGProps } from "react";
+import { useEffect, useId, useState, type SVGProps } from "react";
 import { Link, NavLink, useLocation } from "react-router-dom";
 import { motion, useScroll, useTransform } from "framer-motion";
 import { Menu } from "lucide-react";
@@ -28,10 +28,12 @@ function WhatsAppGlyph(props: SVGProps<SVGSVGElement>) {
 }
 
 function InstagramGlyph(props: SVGProps<SVGSVGElement>) {
+  // Her instance kendi gradient ID'sini alır — aynı sayfada çakışma olmaz.
+  const gid = useId().replace(/:/g, "");
   return (
     <svg viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" {...props}>
       <defs>
-        <linearGradient id="ig-grad-nav" x1="0%" y1="100%" x2="100%" y2="0%">
+        <linearGradient id={gid} x1="0%" y1="100%" x2="100%" y2="0%">
           <stop offset="0%" stopColor="#FEDA75" />
           <stop offset="25%" stopColor="#FA7E1E" />
           <stop offset="50%" stopColor="#D62976" />
@@ -39,7 +41,7 @@ function InstagramGlyph(props: SVGProps<SVGSVGElement>) {
           <stop offset="100%" stopColor="#4F5BD5" />
         </linearGradient>
       </defs>
-      <rect x="2" y="2" width="28" height="28" rx="7.5" ry="7.5" fill="url(#ig-grad-nav)" />
+      <rect x="2" y="2" width="28" height="28" rx="7.5" ry="7.5" fill={`url(#${gid})`} />
       <circle cx="16" cy="16" r="5.4" fill="none" stroke="#fff" strokeWidth="2" />
       <circle cx="22.6" cy="9.4" r="1.4" fill="#fff" />
     </svg>
@@ -66,6 +68,45 @@ function FlagEN(props: SVGProps<SVGSVGElement>) {
       <path d="M15 0 V20 M0 10 H30" stroke="#fff" strokeWidth="5" />
       <path d="M15 0 V20 M0 10 H30" stroke="#C8102E" strokeWidth="3" />
     </svg>
+  );
+}
+
+function LangSwitcher() {
+  const { lang, setLang } = useLang();
+  const langBtn =
+    "inline-flex items-center gap-1.5 font-sans text-[0.65rem] uppercase tracking-[0.18em] transition-colors duration-200";
+  return (
+    <div
+      className="flex items-center gap-2 rounded-full border border-border bg-background/60 px-2.5 py-1.5 backdrop-blur"
+      role="group"
+      aria-label="Dil seçimi"
+    >
+      <button
+        type="button"
+        onClick={() => setLang("tr")}
+        aria-pressed={lang === "tr"}
+        className={cn(
+          langBtn,
+          lang === "tr" ? "font-medium text-foreground" : "text-foreground/40 hover:text-foreground/60",
+        )}
+      >
+        <FlagTR className="h-[10px] w-4 rounded-[1px]" />
+        TR
+      </button>
+      <span aria-hidden className="h-3 w-px bg-border" />
+      <button
+        type="button"
+        onClick={() => setLang("en")}
+        aria-pressed={lang === "en"}
+        className={cn(
+          langBtn,
+          lang === "en" ? "font-medium text-foreground" : "text-foreground/40 hover:text-foreground/60",
+        )}
+      >
+        <FlagEN className="h-[10px] w-4 rounded-[1px]" />
+        EN
+      </button>
+    </div>
   );
 }
 
@@ -141,15 +182,12 @@ export default function Nav() {
 
   const [open, setOpen] = useState(false);
   const [logoFailed, setLogoFailed] = useState(false);
-  const { lang, setLang, t } = useLang();
+  const { t } = useLang();
   const location = useLocation();
 
   useEffect(() => {
     setOpen(false);
   }, [location.pathname]);
-
-  const langBtn =
-    "inline-flex items-center gap-1.5 font-sans text-[0.65rem] uppercase tracking-[0.18em] transition-colors duration-200";
 
   return (
     <motion.header style={{ backdropFilter }} className="fixed top-0 left-0 right-0 z-50 w-full">
@@ -164,16 +202,12 @@ export default function Nav() {
         aria-hidden
       />
 
-      <div
-        className="relative mx-auto flex h-24 w-full max-w-[1440px] items-center"
-        style={{
-          paddingLeft: "clamp(6px, 1vw, 14px)",
-          paddingRight: "clamp(16px, 3vw, 32px)",
-        }}
-      >
+      {/* Mobil: logo solda · hamburger sağda — ortası boş, dengeli.
+          Masaüstü: logo solda · menü tam ortada · sosyal+dil sağda. */}
+      <div className="relative mx-auto flex h-16 w-full max-w-[1440px] items-center justify-between gap-3 px-4 sm:px-6 md:h-24 md:px-8">
         <Link
           to="/"
-          className="flex min-w-0 shrink items-center gap-2 hover:opacity-85 transition-opacity sm:gap-3"
+          className="flex min-w-0 shrink items-center hover:opacity-85 transition-opacity"
           aria-label="Alleyfit Wellness Studio - Anasayfa"
         >
           {!logoFailed ? (
@@ -181,8 +215,7 @@ export default function Nav() {
               <img
                 src="/logo.jpg"
                 alt="Alleyfit Wellness Studio"
-                className="hidden h-16 w-auto max-w-[128px] object-contain sm:block sm:h-20 sm:max-w-none"
-                style={{ filter: "none" }}
+                className="hidden h-12 w-auto object-contain sm:block sm:h-20"
                 onError={() => setLogoFailed(true)}
               />
               <span className="sm:hidden">
@@ -194,28 +227,10 @@ export default function Nav() {
           )}
         </Link>
 
-        <div className="ml-2 flex items-center gap-1.5 shrink-0 md:hidden">
-          <a
-            href={WHATSAPP_HREF}
-            target="_blank"
-            rel="noreferrer"
-            aria-label="WhatsApp ile iletişim"
-            className="inline-flex h-8 w-8 items-center justify-center rounded-full border border-border bg-background/80 text-foreground/80"
-          >
-            <WhatsAppGlyph className="h-[14px] w-[14px]" />
-          </a>
-          <a
-            href={INSTAGRAM_HREF}
-            target="_blank"
-            rel="noreferrer"
-            aria-label="Instagram"
-            className="inline-flex h-8 w-8 items-center justify-center rounded-full border border-border bg-background/80 text-foreground/80"
-          >
-            <InstagramGlyph className="h-[14px] w-[14px]" />
-          </a>
-        </div>
-
-        <nav className="hidden flex-1 items-center justify-center gap-x-7 px-4 md:flex lg:gap-x-9" aria-label="Ana menü">
+        <nav
+          className="absolute left-1/2 hidden -translate-x-1/2 items-center gap-x-6 md:flex lg:gap-x-9"
+          aria-label="Ana menü"
+        >
           {NAV_ITEMS.map((item) => (
             <NavLink
               key={item.to}
@@ -223,7 +238,7 @@ export default function Nav() {
               end={item.to === "/"}
               className={({ isActive }) =>
                 cn(
-                  "relative whitespace-nowrap font-sans text-[0.92rem] uppercase tracking-[0.16em] transition-colors duration-200",
+                  "relative whitespace-nowrap font-sans text-[0.84rem] uppercase tracking-[0.14em] transition-colors duration-200 lg:text-[0.92rem] lg:tracking-[0.16em]",
                   isActive ? "font-semibold text-foreground" : "font-normal text-foreground/70 hover:text-foreground",
                 )
               }
@@ -257,70 +272,22 @@ export default function Nav() {
           >
             <InstagramGlyph className="h-7 w-7" />
           </a>
-
-          <div
-            className="ml-1 flex items-center gap-2 rounded-full border border-border bg-background/60 px-2.5 py-1.5 backdrop-blur"
-            role="group"
-            aria-label="Dil seçimi"
-          >
-            <button
-              type="button"
-              onClick={() => setLang("tr")}
-              aria-pressed={lang === "tr"}
-              className={cn(
-                langBtn,
-                lang === "tr" ? "font-medium text-foreground" : "text-foreground/40 hover:text-foreground/60",
-              )}
-            >
-              <FlagTR className="h-[10px] w-4 rounded-[1px]" />
-              TR
-            </button>
-            <span aria-hidden className="h-3 w-px bg-border" />
-            <button
-              type="button"
-              onClick={() => setLang("en")}
-              aria-pressed={lang === "en"}
-              className={cn(
-                langBtn,
-                lang === "en" ? "font-medium text-foreground" : "text-foreground/40 hover:text-foreground/60",
-              )}
-            >
-              <FlagEN className="h-[10px] w-4 rounded-[1px]" />
-              EN
-            </button>
-          </div>
+          <LangSwitcher />
         </div>
 
         <Sheet open={open} onOpenChange={setOpen}>
-          <SheetTrigger asChild className="ml-1 shrink-0 md:hidden">
-            <button type="button" aria-label="Menüyü aç" className="inline-flex h-10 w-10 items-center justify-center text-foreground">
+          <SheetTrigger asChild className="-mr-2 shrink-0 md:hidden">
+            <button
+              type="button"
+              aria-label="Menüyü aç"
+              className="inline-flex h-11 w-11 items-center justify-center text-foreground"
+            >
               <Menu strokeWidth={1.5} className="h-6 w-6" />
             </button>
           </SheetTrigger>
 
           <SheetContent side="right" className="flex flex-col bg-background">
-            <div className="mt-10 flex items-center gap-2">
-              <a
-                href={WHATSAPP_HREF}
-                target="_blank"
-                rel="noreferrer"
-                aria-label="WhatsApp ile iletişim"
-                className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-border bg-background"
-              >
-                <WhatsAppGlyph className="h-4 w-4" />
-              </a>
-              <a
-                href={INSTAGRAM_HREF}
-                target="_blank"
-                rel="noreferrer"
-                aria-label="Instagram"
-                className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-border bg-background"
-              >
-                <InstagramGlyph className="h-4 w-4" />
-              </a>
-            </div>
-
-            <nav className="mt-12 flex flex-col" aria-label="Mobil menü">
+            <nav className="mt-10 flex flex-col" aria-label="Mobil menü">
               {NAV_ITEMS.map((item) => (
                 <NavLink
                   key={item.to}
@@ -329,7 +296,7 @@ export default function Nav() {
                   onClick={() => setOpen(false)}
                   className={({ isActive }) =>
                     cn(
-                      "py-4 font-serif text-[1.6rem] tracking-[0.02em] transition-colors duration-200",
+                      "border-b border-border/60 py-3.5 font-serif text-[1.35rem] tracking-[0.01em] transition-colors duration-200",
                       isActive ? "font-semibold text-foreground" : "font-normal text-foreground/70 hover:text-foreground",
                     )
                   }
@@ -339,7 +306,33 @@ export default function Nav() {
               ))}
             </nav>
 
-            <div className="mt-auto pt-8">
+            <div className="mt-auto space-y-5 pt-8">
+              <div className="flex items-center justify-between">
+                <span className="text-[0.62rem] uppercase tracking-[0.22em] text-foreground/40">Dil</span>
+                <LangSwitcher />
+              </div>
+
+              <div className="flex items-center gap-2">
+                <a
+                  href={WHATSAPP_HREF}
+                  target="_blank"
+                  rel="noreferrer"
+                  aria-label="WhatsApp ile iletişim"
+                  className="inline-flex h-11 w-11 items-center justify-center rounded-full border border-border bg-background"
+                >
+                  <WhatsAppGlyph className="h-[18px] w-[18px]" />
+                </a>
+                <a
+                  href={INSTAGRAM_HREF}
+                  target="_blank"
+                  rel="noreferrer"
+                  aria-label="Instagram"
+                  className="inline-flex h-11 w-11 items-center justify-center rounded-full border border-border bg-background"
+                >
+                  <InstagramGlyph className="h-[18px] w-[18px]" />
+                </a>
+              </div>
+
               <Link
                 to={CTA_HREF}
                 onClick={() => setOpen(false)}

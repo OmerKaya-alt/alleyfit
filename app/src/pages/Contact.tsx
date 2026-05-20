@@ -29,7 +29,7 @@ export default function Contact() {
           <Reveal>
             <div className="aspect-[4/3] lg:aspect-[3/4] overflow-hidden bg-muted">
               <iframe
-                src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3010.123!2d28.987!3d41.060!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x14cab7650ab73473%3A0x4a0a17db5ed1b25e!2zxZ7DvHRsw7w!5e0!3m2!1str!2str!4v1700000000000"
+                src="https://maps.google.com/maps?q=ALLEYF%C4%B0T%20P%C4%B0LATES%20STUD%C4%B0O%20%C5%9Eile&t=&z=15&ie=UTF8&iwloc=&output=embed"
                 width="100%"
                 height="100%"
                 loading="lazy"
@@ -64,7 +64,7 @@ export default function Contact() {
                 <Mail strokeWidth={1.5} className="w-5 h-5 mt-1 text-foreground/60 shrink-0" />
                 <div>
                   <span className="text-[0.7rem] uppercase tracking-[0.22em] text-vc-accent">{t("contact.email")}</span>
-                  <a href="mailto:merhaba@alleyfit.com" className="block font-serif text-[1.2rem] mt-1 hover:opacity-70 transition">merhaba@alleyfit.com</a>
+                  <a href="mailto:aleynavrmaz@gmail.com" className="block font-serif text-[1.2rem] mt-1 hover:opacity-70 transition">aleynavrmaz@gmail.com</a>
                 </div>
               </li>
             </ul>
