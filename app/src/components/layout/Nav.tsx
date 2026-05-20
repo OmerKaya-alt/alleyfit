@@ -5,24 +5,12 @@ import { Menu } from "lucide-react";
 
 import { cn } from "@/lib/utils";
 import { useLang, type DictKey } from "@/lib/lang";
-import {
-  Sheet,
-  SheetContent,
-  SheetTrigger,
-} from "@/components/ui/sheet";
-
-/* ------------------------------------------------------------------ */
-/*  External links                                                      */
-/* ------------------------------------------------------------------ */
+import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 
 const WHATSAPP_HREF =
   "https://wa.me/905366711793?text=" +
-  encodeURIComponent("Merhaba, Alleyfit Pilates hakkında bilgi almak istiyorum.");
+  encodeURIComponent("Merhaba, Alleyfit Pilates hakkinda bilgi almak istiyorum.");
 const INSTAGRAM_HREF = "https://www.instagram.com/alleyfitstudio/";
-
-/* ------------------------------------------------------------------ */
-/*  Brand glyphs                                                        */
-/* ------------------------------------------------------------------ */
 
 function WhatsAppGlyph(props: SVGProps<SVGSVGElement>) {
   return (
@@ -64,10 +52,7 @@ function FlagTR(props: SVGProps<SVGSVGElement>) {
       <rect width="30" height="20" fill="#E30A17" />
       <circle cx="11.5" cy="10" r="4.2" fill="#fff" />
       <circle cx="12.6" cy="10" r="3.3" fill="#E30A17" />
-      <polygon
-        points="17.4,10 15.4,10.65 16.65,8.95 16.65,11.05 15.4,9.35"
-        fill="#fff"
-      />
+      <polygon points="17.4,10 15.4,10.65 16.65,8.95 16.65,11.05 15.4,9.35" fill="#fff" />
     </svg>
   );
 }
@@ -84,9 +69,54 @@ function FlagEN(props: SVGProps<SVGSVGElement>) {
   );
 }
 
-/* ------------------------------------------------------------------ */
-/*  Nav data                                                            */
-/* ------------------------------------------------------------------ */
+function BrandMark({ compact = false }: { compact?: boolean }) {
+  return (
+    <span className={cn("flex items-center min-w-0 leading-none", compact ? "gap-1.5" : "gap-2")}>
+      <svg
+        viewBox="0 0 100 110"
+        className={compact ? "w-8 h-8 shrink-0 text-vc-accent" : "w-12 h-12 shrink-0 text-vc-accent"}
+        fill="none"
+        stroke="currentColor"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        aria-hidden="true"
+      >
+        <path d="M 8 102 L 8 50 A 42 42 0 0 1 92 50 L 92 102" strokeWidth="2.4" />
+        <line x1="50" y1="68" x2="50" y2="14" strokeWidth="2" />
+        <line x1="50" y1="68" x2="36" y2="18" strokeWidth="2" />
+        <line x1="50" y1="68" x2="64" y2="18" strokeWidth="2" />
+        <line x1="50" y1="68" x2="22" y2="28" strokeWidth="2" />
+        <line x1="50" y1="68" x2="78" y2="28" strokeWidth="2" />
+        <line x1="50" y1="68" x2="12" y2="44" strokeWidth="2" />
+        <line x1="50" y1="68" x2="88" y2="44" strokeWidth="2" />
+        <line x1="50" y1="68" x2="44" y2="20" strokeWidth="1.8" strokeDasharray="3 3" />
+        <line x1="50" y1="68" x2="56" y2="20" strokeWidth="1.8" strokeDasharray="3 3" />
+        <line x1="50" y1="68" x2="30" y2="22" strokeWidth="1.8" strokeDasharray="3 3" />
+        <line x1="50" y1="68" x2="70" y2="22" strokeWidth="1.8" strokeDasharray="3 3" />
+        <line x1="50" y1="68" x2="16" y2="36" strokeWidth="1.8" strokeDasharray="3 3" />
+        <line x1="50" y1="68" x2="84" y2="36" strokeWidth="1.8" strokeDasharray="3 3" />
+        <circle cx="50" cy="78" r="16" strokeWidth="2.4" />
+        <path d="M 40 86 Q 50 72 60 82 Q 64 88 56 92" strokeWidth="2.2" />
+        <line x1="8" y1="102" x2="92" y2="102" strokeWidth="2.4" />
+      </svg>
+      <span className="flex min-w-0 flex-col leading-none">
+        <span
+          className={cn(
+            "font-serif font-medium text-vc-accent whitespace-nowrap",
+            compact ? "text-[0.95rem]" : "text-[1.55rem]",
+          )}
+        >
+          Alleyfit
+        </span>
+        {!compact ? (
+          <span className="hidden sm:block mt-1 text-[0.6rem] uppercase tracking-[0.32em] text-vc-accent/70">
+            WELLNESS / STUDIO
+          </span>
+        ) : null}
+      </span>
+    </span>
+  );
+}
 
 type NavItem = { to: string; key: DictKey };
 
@@ -101,10 +131,6 @@ const NAV_ITEMS: NavItem[] = [
 ];
 
 const CTA_HREF = "/iletisim";
-
-/* ------------------------------------------------------------------ */
-/*  Nav component                                                       */
-/* ------------------------------------------------------------------ */
 
 export default function Nav() {
   const { scrollY } = useScroll();
@@ -126,10 +152,7 @@ export default function Nav() {
     "inline-flex items-center gap-1.5 font-sans text-[0.65rem] uppercase tracking-[0.18em] transition-colors duration-200";
 
   return (
-    <motion.header
-      style={{ backdropFilter }}
-      className="fixed top-0 left-0 right-0 z-50 w-full"
-    >
+    <motion.header style={{ backdropFilter }} className="fixed top-0 left-0 right-0 z-50 w-full">
       <motion.div
         style={{ opacity: bgOpacity }}
         className="absolute inset-0 bg-background pointer-events-none"
@@ -148,66 +171,51 @@ export default function Nav() {
           paddingRight: "clamp(16px, 3vw, 32px)",
         }}
       >
-        {/* SOL: brand — gerçek logo (public/logo.png) varsa onu, yoksa SVG fallback */}
         <Link
           to="/"
-          className="flex items-center shrink-0 hover:opacity-85 transition-opacity gap-3"
-          aria-label="Alleyfit Wellness Studio — Anasayfa"
+          className="flex min-w-0 shrink items-center gap-2 hover:opacity-85 transition-opacity sm:gap-3"
+          aria-label="Alleyfit Wellness Studio - Anasayfa"
         >
           {!logoFailed ? (
-            <img
-              src="/logo.jpg"
-              alt="Alleyfit Wellness Studio"
-              className="h-20 w-auto object-contain"
-              style={{ filter: "none" }}
-              onError={() => setLogoFailed(true)}
-            />
-          ) : (
             <>
-              <svg
-                viewBox="0 0 100 110"
-                className="w-12 h-12 shrink-0 text-vc-accent"
-                fill="none"
-                stroke="currentColor"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                aria-hidden="true"
-              >
-                <path d="M 8 102 L 8 50 A 42 42 0 0 1 92 50 L 92 102" strokeWidth="2.4" />
-                <line x1="50" y1="68" x2="50" y2="14" strokeWidth="2" />
-                <line x1="50" y1="68" x2="36" y2="18" strokeWidth="2" />
-                <line x1="50" y1="68" x2="64" y2="18" strokeWidth="2" />
-                <line x1="50" y1="68" x2="22" y2="28" strokeWidth="2" />
-                <line x1="50" y1="68" x2="78" y2="28" strokeWidth="2" />
-                <line x1="50" y1="68" x2="12" y2="44" strokeWidth="2" />
-                <line x1="50" y1="68" x2="88" y2="44" strokeWidth="2" />
-                <line x1="50" y1="68" x2="44" y2="20" strokeWidth="1.8" strokeDasharray="3 3" />
-                <line x1="50" y1="68" x2="56" y2="20" strokeWidth="1.8" strokeDasharray="3 3" />
-                <line x1="50" y1="68" x2="30" y2="22" strokeWidth="1.8" strokeDasharray="3 3" />
-                <line x1="50" y1="68" x2="70" y2="22" strokeWidth="1.8" strokeDasharray="3 3" />
-                <line x1="50" y1="68" x2="16" y2="36" strokeWidth="1.8" strokeDasharray="3 3" />
-                <line x1="50" y1="68" x2="84" y2="36" strokeWidth="1.8" strokeDasharray="3 3" />
-                <circle cx="50" cy="78" r="16" strokeWidth="2.4" />
-                <path d="M 40 86 Q 50 72 60 82 Q 64 88 56 92" strokeWidth="2.2" />
-                <line x1="8" y1="102" x2="92" y2="102" strokeWidth="2.4" />
-              </svg>
-              <span className="flex flex-col leading-none">
-                <span className="font-serif text-[1.55rem] tracking-[-0.01em] font-medium text-vc-accent">
-                  Alleyfit
-                </span>
-                <span className="hidden sm:block text-[0.6rem] uppercase tracking-[0.32em] mt-1 text-vc-accent/70">
-                  WELLNESS · STUDIO
-                </span>
+              <img
+                src="/logo.jpg"
+                alt="Alleyfit Wellness Studio"
+                className="hidden h-16 w-auto max-w-[128px] object-contain sm:block sm:h-20 sm:max-w-none"
+                style={{ filter: "none" }}
+                onError={() => setLogoFailed(true)}
+              />
+              <span className="sm:hidden">
+                <BrandMark compact />
               </span>
             </>
+          ) : (
+            <BrandMark />
           )}
         </Link>
 
-        {/* ORTA: nav linkleri — flex-1 ile genişler, justify-center ile ortalı */}
-        <nav
-          className="hidden md:flex flex-1 items-center justify-center gap-x-7 lg:gap-x-9 px-4"
-          aria-label="Ana menü"
-        >
+        <div className="ml-2 flex items-center gap-1.5 shrink-0 md:hidden">
+          <a
+            href={WHATSAPP_HREF}
+            target="_blank"
+            rel="noreferrer"
+            aria-label="WhatsApp ile iletişim"
+            className="inline-flex h-8 w-8 items-center justify-center rounded-full border border-border bg-background/80 text-foreground/80"
+          >
+            <WhatsAppGlyph className="h-[14px] w-[14px]" />
+          </a>
+          <a
+            href={INSTAGRAM_HREF}
+            target="_blank"
+            rel="noreferrer"
+            aria-label="Instagram"
+            className="inline-flex h-8 w-8 items-center justify-center rounded-full border border-border bg-background/80 text-foreground/80"
+          >
+            <InstagramGlyph className="h-[14px] w-[14px]" />
+          </a>
+        </div>
+
+        <nav className="hidden flex-1 items-center justify-center gap-x-7 px-4 md:flex lg:gap-x-9" aria-label="Ana menü">
           {NAV_ITEMS.map((item) => (
             <NavLink
               key={item.to}
@@ -215,52 +223,43 @@ export default function Nav() {
               end={item.to === "/"}
               className={({ isActive }) =>
                 cn(
-                  "relative font-sans text-[0.92rem] uppercase tracking-[0.16em] transition-colors duration-200 whitespace-nowrap",
-                  isActive
-                    ? "font-semibold text-foreground"
-                    : "font-normal text-foreground/70 hover:text-foreground"
+                  "relative whitespace-nowrap font-sans text-[0.92rem] uppercase tracking-[0.16em] transition-colors duration-200",
+                  isActive ? "font-semibold text-foreground" : "font-normal text-foreground/70 hover:text-foreground",
                 )
               }
             >
               {({ isActive }) => (
                 <>
                   <span>{t(item.key)}</span>
-                  {isActive && (
-                    <span
-                      aria-hidden
-                      className="absolute -bottom-1.5 left-0 right-0 h-px bg-foreground"
-                    />
-                  )}
+                  {isActive && <span aria-hidden className="absolute -bottom-1.5 left-0 right-0 h-px bg-foreground" />}
                 </>
               )}
             </NavLink>
           ))}
         </nav>
 
-        {/* SAĞ: sosyal + dil — birlikte gruplu, sığ */}
-        <div className="hidden md:flex items-center gap-4 shrink-0">
+        <div className="hidden shrink-0 items-center gap-4 md:flex">
           <a
             href={WHATSAPP_HREF}
             target="_blank"
             rel="noreferrer"
             aria-label="WhatsApp ile iletişim"
-            className="block hover:scale-110 transition-transform duration-200"
+            className="block transition-transform duration-200 hover:scale-110"
           >
-            <WhatsAppGlyph className="w-7 h-7" />
+            <WhatsAppGlyph className="h-7 w-7" />
           </a>
           <a
             href={INSTAGRAM_HREF}
             target="_blank"
             rel="noreferrer"
             aria-label="Instagram"
-            className="block hover:scale-110 transition-transform duration-200"
+            className="block transition-transform duration-200 hover:scale-110"
           >
-            <InstagramGlyph className="w-7 h-7" />
+            <InstagramGlyph className="h-7 w-7" />
           </a>
 
-          {/* Dil pill — Nav'a entegre, fixed/overlap yok */}
           <div
-            className="ml-1 flex items-center gap-2 rounded-full border border-border bg-background/60 backdrop-blur px-2.5 py-1.5"
+            className="ml-1 flex items-center gap-2 rounded-full border border-border bg-background/60 px-2.5 py-1.5 backdrop-blur"
             role="group"
             aria-label="Dil seçimi"
           >
@@ -270,12 +269,10 @@ export default function Nav() {
               aria-pressed={lang === "tr"}
               className={cn(
                 langBtn,
-                lang === "tr"
-                  ? "font-medium text-foreground"
-                  : "text-foreground/40 hover:text-foreground/60"
+                lang === "tr" ? "font-medium text-foreground" : "text-foreground/40 hover:text-foreground/60",
               )}
             >
-              <FlagTR className="w-4 h-[10px] rounded-[1px]" />
+              <FlagTR className="h-[10px] w-4 rounded-[1px]" />
               TR
             </button>
             <span aria-hidden className="h-3 w-px bg-border" />
@@ -285,30 +282,44 @@ export default function Nav() {
               aria-pressed={lang === "en"}
               className={cn(
                 langBtn,
-                lang === "en"
-                  ? "font-medium text-foreground"
-                  : "text-foreground/40 hover:text-foreground/60"
+                lang === "en" ? "font-medium text-foreground" : "text-foreground/40 hover:text-foreground/60",
               )}
             >
-              <FlagEN className="w-4 h-[10px] rounded-[1px]" />
+              <FlagEN className="h-[10px] w-4 rounded-[1px]" />
               EN
             </button>
           </div>
         </div>
 
-        {/* Mobile hamburger */}
         <Sheet open={open} onOpenChange={setOpen}>
-          <SheetTrigger asChild className="md:hidden ml-auto">
-            <button
-              type="button"
-              aria-label="Menüyü aç"
-              className="inline-flex h-10 w-10 items-center justify-center text-foreground"
-            >
+          <SheetTrigger asChild className="ml-1 shrink-0 md:hidden">
+            <button type="button" aria-label="Menüyü aç" className="inline-flex h-10 w-10 items-center justify-center text-foreground">
               <Menu strokeWidth={1.5} className="h-6 w-6" />
             </button>
           </SheetTrigger>
 
           <SheetContent side="right" className="flex flex-col bg-background">
+            <div className="mt-10 flex items-center gap-2">
+              <a
+                href={WHATSAPP_HREF}
+                target="_blank"
+                rel="noreferrer"
+                aria-label="WhatsApp ile iletişim"
+                className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-border bg-background"
+              >
+                <WhatsAppGlyph className="h-4 w-4" />
+              </a>
+              <a
+                href={INSTAGRAM_HREF}
+                target="_blank"
+                rel="noreferrer"
+                aria-label="Instagram"
+                className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-border bg-background"
+              >
+                <InstagramGlyph className="h-4 w-4" />
+              </a>
+            </div>
+
             <nav className="mt-12 flex flex-col" aria-label="Mobil menü">
               {NAV_ITEMS.map((item) => (
                 <NavLink
@@ -319,9 +330,7 @@ export default function Nav() {
                   className={({ isActive }) =>
                     cn(
                       "py-4 font-serif text-[1.6rem] tracking-[0.02em] transition-colors duration-200",
-                      isActive
-                        ? "font-semibold text-foreground"
-                        : "font-normal text-foreground/70 hover:text-foreground"
+                      isActive ? "font-semibold text-foreground" : "font-normal text-foreground/70 hover:text-foreground",
                     )
                   }
                 >

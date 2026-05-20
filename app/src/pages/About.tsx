@@ -21,16 +21,17 @@ export default function About() {
       />
 
       <SplitBlock
-        image={images.portrait.studio1}
+        image={images.portrait.studio2}
         eyebrow={t("about.story.eyebrow")}
         title={t("about.story.title")}
         body={t("about.story.body")}
+        alt={t("about.story.title")}
         cta={{ label: t("about.story.cta"), href: "/dersler" }}
       />
 
       <SplitBlock
         flip
-        image={images.portrait.studio2}
+        image={images.portrait.studio1}
         eyebrow={t("about.philosophy.eyebrow")}
         title={t("about.philosophy.title")}
         body={t("about.philosophy.body")}

@@ -395,7 +395,7 @@ function SlotEditModal({
   const [instructorId, setInstructorId] = useState<string>(
     slot?.instructor_id ?? instructors[0]?.id ?? "",
   );
-  const [capacity, setCapacity] = useState<number>(slot?.capacity ?? 6);
+  const [capacity, setCapacity] = useState<number>(slot?.capacity ?? 12);
   const [notes, setNotes] = useState<string>(slot?.notes ?? "");
   const [saving, setSaving] = useState(false);
 
@@ -756,7 +756,10 @@ function addDays(d: Date, n: number) {
   return r;
 }
 function isoDate(d: Date) {
-  return d.toISOString().slice(0, 10);
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  return `${y}-${m}-${day}`;
 }
 function formatDateTR(d: Date) {
   return d.toLocaleDateString("tr-TR", { day: "numeric", month: "long" });

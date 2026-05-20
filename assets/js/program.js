@@ -98,7 +98,7 @@ function groupByDay(slots, weekStart) {
   });
   // Saate göre sırala
   for (const arr of map.values()) {
-    arr.sort((a, b) => new Date(a.starts_at) - new Date(b.starts_at));
+    arr.sort((a, b) => slotSortMinutes(a.starts_at) - slotSortMinutes(b.starts_at));
   }
   return map;
 }
@@ -164,6 +164,9 @@ function renderSlot(slot) {
   const serviceCode = slot.service?.code || "";
   const capacity = slot.capacity || slot.service?.capacity || 1;
   const isClosed = slot.status !== "open";
+  const notesHtml = slot.notes
+    ? `<div class="schedule-slot-notes">${escapeHtml(slot.notes)}</div>`
+    : "";
 
   // Görsel sınıf — service code'a göre
   let stateClass = "";
@@ -200,6 +203,7 @@ function renderSlot(slot) {
       <div class="schedule-slot-info">
         <div class="schedule-slot-class">${escapeHtml(serviceName)}${titleSuffix}</div>
         <div class="schedule-slot-instructor">${escapeHtml(subline)}</div>
+        ${notesHtml}
       </div>
       ${actionHtml}
     </div>
@@ -289,6 +293,12 @@ async function onSubmitBooking(e) {
 function daysBetween(a, b) {
   const ms = b.getTime() - a.getTime();
   return Math.floor(ms / 86400000);
+}
+
+function slotSortMinutes(startsAt) {
+  const d = new Date(startsAt);
+  const minutes = d.getHours() * 60 + d.getMinutes();
+  return minutes === 0 ? 24 * 60 : minutes;
 }
 
 function sameDay(a, b) {

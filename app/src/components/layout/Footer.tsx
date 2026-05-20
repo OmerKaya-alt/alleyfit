@@ -57,7 +57,7 @@ function FacebookGlyph(props: SVGProps<SVGSVGElement>) {
 const studioLinks: Array<{ label: string; to: string }> = [
   { label: "Hakkımızda", to: "/hakkimizda" },
   { label: "Dersler", to: "/dersler" },
-  { label: "Eğitmenler", to: "/hakkimizda#egitmenler" },
+  { label: "Eğitmenler", to: "/hakkimizda#egitmen" },
   { label: "Kurumsal", to: "/kurumsal" },
 ];
 

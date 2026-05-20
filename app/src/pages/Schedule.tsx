@@ -4,11 +4,11 @@ import { ChevronLeft, ChevronRight, X, MessageCircle } from "lucide-react";
 
 import Reveal from "@/components/motion/Reveal";
 import { classes as CLASSES } from "@/data/classes";
+import { FALLBACK_SLOTS } from "@/data/fallbackSchedule";
 import { cn } from "@/lib/utils";
 import { useLang } from "@/lib/lang";
 import {
   supabase,
-  supabaseConfigured,
   type DbSlot,
   type DbInstructor,
   type SlotStatus,
@@ -49,6 +49,32 @@ function formatDateLong(iso: string, lang: "tr" | "en") {
   });
 }
 
+function timeToMinutes(time: string) {
+  const [hours, minutes] = time.split(":").map(Number);
+  return (Number.isFinite(hours) ? hours : 0) * 60 + (Number.isFinite(minutes) ? minutes : 0);
+}
+
+function localISODate(date = new Date()) {
+  const y = date.getFullYear();
+  const m = String(date.getMonth() + 1).padStart(2, "0");
+  const d = String(date.getDate()).padStart(2, "0");
+  return `${y}-${m}-${d}`;
+}
+
+function mergeSlots(primary: DbSlot[], fallback: DbSlot[]) {
+  const map = new Map<string, DbSlot>();
+  for (const slot of fallback) {
+    map.set(`${slot.date} ${slot.time}`, slot);
+  }
+  for (const slot of primary) {
+    map.set(`${slot.date} ${slot.time}`, slot);
+  }
+  return [...map.values()].sort((a, b) => {
+    const byDate = a.date.localeCompare(b.date);
+    return byDate !== 0 ? byDate : timeToMinutes(a.time) - timeToMinutes(b.time);
+  });
+}
+
 /* -------------------------------------------------------------------- */
 
 export default function Schedule() {
@@ -61,9 +87,14 @@ export default function Schedule() {
   const [reserveSlot, setReserveSlot] = useState<DbSlot | null>(null);
 
   async function loadSlots() {
-    if (!supabase) return;
-    const today = new Date().toISOString().slice(0, 10);
-    const future = new Date(Date.now() + 14 * 86400_000).toISOString().slice(0, 10);
+    if (!supabase) {
+      setSlots(FALLBACK_SLOTS);
+      return;
+    }
+    const today = localISODate();
+    const futureDate = new Date();
+    futureDate.setDate(futureDate.getDate() + 14);
+    const future = localISODate(futureDate);
     const { data } = await supabase
       .from("slots")
       .select("*")
@@ -71,11 +102,13 @@ export default function Schedule() {
       .lte("date", future)
       .order("date")
       .order("time");
-    setSlots((data as DbSlot[]) ?? []);
+    const nextSlots = (data as DbSlot[]) ?? [];
+    setSlots(nextSlots.length > 0 ? mergeSlots(nextSlots, FALLBACK_SLOTS) : FALLBACK_SLOTS);
   }
 
   useEffect(() => {
     if (!supabase) {
+      setSlots(FALLBACK_SLOTS);
       setLoading(false);
       return;
     }
@@ -120,12 +153,8 @@ export default function Schedule() {
     return slots
       .filter((s) => s.date === activeDate)
       .filter((s) => !classFilter || s.class_slug === classFilter)
-      .sort((a, b) => a.time.localeCompare(b.time));
+      .sort((a, b) => timeToMinutes(a.time) - timeToMinutes(b.time));
   }, [slots, activeDate, classFilter]);
-
-  if (!supabaseConfigured) {
-    return <NotConfiguredMessage lang={lang} />;
-  }
 
   return (
     <section className="pt-[clamp(120px,16vw,180px)] pb-[var(--pad-y)] bg-background min-h-screen">
@@ -593,3 +622,5 @@ function NotConfiguredMessage({ lang }: { lang: "tr" | "en" }) {
     </section>
   );
 }
+
+void NotConfiguredMessage;

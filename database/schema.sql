@@ -380,6 +380,56 @@ begin
     ('2026-05-12 22:00+03', v_couple,  v_aleyna,  2, 'closed'),
     ('2026-05-12 23:00+03', v_birebir, v_aleyna,  1, 'open')
   on conflict do nothing;
+
+  -- Cuma 15 Mayıs 2026 â€” ekran gÃ¶rÃ¼ntÃ¼sÃ¼
+  insert into public.slots (starts_at, service_id, instructor_id, capacity, status, notes) values
+    ('2026-05-15 14:00+03', v_birebir, v_aleyna, 1, 'closed', 'SÃ¼eda bayraktar (birebir ders) / Ceyda Mutlu 15 MayÄ±s'),
+    ('2026-05-15 15:00+03', v_couple,  v_aleyna, 2, 'closed', 'Nisa ve TuÄŸba 15 MayÄ±s'),
+    ('2026-05-15 16:00+03', v_birebir, v_aleyna, 1, 'closed', 'BegÃ¼m 15 MayÄ±s'),
+    ('2026-05-15 17:00+03', v_grup,    v_aleyna, 6, 'closed', 'Grup sÄ±nÄ±fÄ± 3/6 Â· 24'),
+    ('2026-05-15 18:00+03', v_grup,    v_aleyna, 6, 'closed', 'Grup dersi'),
+    ('2026-05-15 19:00+03', v_grup,    v_aleyna, 6, 'closed', 'BÃ¼ÅŸra ve Sultan (grup dersi) / 8 MayÄ±s yok'),
+    ('2026-05-15 20:00+03', v_grup,    v_aleyna, 6, 'closed', 'Ã‡aÄŸla, Beyza, Berfu (grup dersi)'),
+    ('2026-05-15 21:00+03', v_grup,    v_aleyna, 6, 'closed', 'Burak ve Ezgi (grup dersi)'),
+    ('2026-05-15 22:00+03', null,      v_aleyna, 6, 'open',   null),
+    ('2026-05-15 23:00+03', null,      v_aleyna, 6, 'open',   null)
+  on conflict do nothing;
+
+  -- Cumartesi 16 MayÄ±s 2026 â€” ekran gÃ¶rÃ¼ntÃ¼sÃ¼
+  insert into public.slots (starts_at, service_id, instructor_id, capacity, status, notes) values
+    ('2026-05-16 07:00+03', v_birebir, v_aleyna, 1, 'closed', 'Funda Mavice 18 Nisan'),
+    ('2026-05-16 08:00+03', v_birebir, v_aleyna, 1, 'closed', 'Mert KoÃ§ak 18 Nisan'),
+    ('2026-05-16 09:00+03', v_couple,  v_aleyna, 2, 'closed', 'Hacer ve GÃ¼lÅŸah 16 MayÄ±s'),
+    ('2026-05-16 10:00+03', v_birebir, v_aleyna, 1, 'closed', 'Ã–zge Ã‡elik YÄ±lmaz 23 MayÄ±s'),
+    ('2026-05-16 11:00+03', v_birebir, v_aleyna, 1, 'closed', 'Burcu Åahin (birebir ders) / Hacer ve GÃ¼lÅŸah 16 MayÄ±s'),
+    ('2026-05-16 12:00+03', v_grup,    v_aleyna, 6, 'closed', 'Ezgi ve Burak (grup dersi) / Melike ve Åenay 2 MayÄ±s'),
+    ('2026-05-16 13:00+03', v_birebir, v_aleyna, 1, 'closed', 'Filiz DinÃ§ (birebir ders)'),
+    ('2026-05-16 14:00+03', v_birebir, v_aleyna, 1, 'closed', 'Åerife Ergin (birebir ders)'),
+    ('2026-05-16 15:00+03', v_birebir, v_aleyna, 1, 'closed', 'Arda Ayvaz (birebir ders) / 16 MayÄ±s akÅŸamÄ±'),
+    ('2026-05-16 16:00+03', v_couple,  v_aleyna, 2, 'closed', 'BÃ¼ÅŸra ve Sultan 16 MayÄ±s'),
+    ('2026-05-16 17:00+03', v_birebir, v_aleyna, 1, 'closed', 'SÃ¼eda Bayraktar (birebir ders)'),
+    ('2026-05-16 18:00+03', v_birebir, v_aleyna, 1, 'closed', 'Nur Balkan (birebir ders)'),
+    ('2026-05-16 19:00+03', v_grup,    v_aleyna, 6, 'closed', 'GÃ¼lÅŸah ve Hacer (grup ders) / Melike ve Åenay 23 MayÄ±s'),
+    ('2026-05-16 20:00+03', v_spin,    v_aleyna, 12, 'closed', 'Spinning class'),
+    ('2026-05-16 21:00+03', v_couple,  v_aleyna, 2, 'closed', 'Berfu Haza ve Ã‡aÄŸla 2 MayÄ±s'),
+    ('2026-05-16 22:00+03', v_birebir, v_aleyna, 1, 'closed', 'GÃ¶kselin Belel YaÅŸar 18 Nisan'),
+    ('2026-05-16 23:00+03', null,      v_aleyna, 6, 'open',   null)
+  on conflict do nothing;
+
+  -- PerÅŸembe 21 MayÄ±s 2026 â€” ekran gÃ¶rÃ¼ntÃ¼sÃ¼
+  insert into public.slots (starts_at, service_id, instructor_id, capacity, status, notes) values
+    ('2026-05-21 14:00+03', v_grup,    v_aleyna, 6, 'closed', 'Naz ve TuÄŸba (grup dersi) / 21 MayÄ±s yok'),
+    ('2026-05-21 15:00+03', v_birebir, v_aleyna, 1, 'closed', 'Ceyda Mutlu 21 MayÄ±s'),
+    ('2026-05-21 16:00+03', v_birebir, v_aleyna, 1, 'closed', 'BegÃ¼m FazlioÄŸlu (birebir ders)'),
+    ('2026-05-21 17:00+03', v_grup,    v_aleyna, 6, 'closed', 'Melek ve Neslihan (grup ders) / 18 Haziran yok'),
+    ('2026-05-21 18:00+03', v_spin,    v_aleyna, 12, 'closed', 'Spinning class'),
+    ('2026-05-21 19:00+03', v_grup,    v_aleyna, 6, 'closed', 'Umut ve Burcu (grup ders) / Duygu Akay 21 MayÄ±s'),
+    ('2026-05-21 20:00+03', v_grup,    v_aleyna, 6, 'closed', 'Grup sÄ±nÄ±fÄ± 6/6'),
+    ('2026-05-21 21:00+03', v_grup,    v_aleyna, 6, 'closed', 'Grup sÄ±nÄ±fÄ± 6/6'),
+    ('2026-05-21 22:00+03', v_birebir, v_aleyna, 1, 'closed', 'Melike ve Åenay (birebir ders) / Hacer ve GÃ¼lÅŸah 14 MayÄ±s / Sena ve Buket 21 MayÄ±s'),
+    ('2026-05-21 23:00+03', v_birebir, v_aleyna, 1, 'closed', 'Funda Mavice (birebir ders)'),
+    ('2026-05-21 00:00+03', v_couple,  v_aleyna, 2, 'closed', '14 MayÄ±s Buket ve Sena')
+  on conflict do nothing;
 end$$;
 
 

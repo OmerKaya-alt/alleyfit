@@ -909,6 +909,13 @@
   font-size: var(--vc-fs-small);
 }
 
+.schedule-slot-notes {
+  color: var(--vc-off-white);
+  font-size: var(--vc-fs-small);
+  line-height: 1.45;
+  opacity: 0.8;
+}
+
 .schedule-slot.is-full {
   opacity: 0.55;
 }
