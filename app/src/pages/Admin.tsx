@@ -330,6 +330,10 @@ function ScheduleTab() {
   const [editing, setEditing] = useState<DbSlot | null>(null);
   const [creating, setCreating] = useState<{ date: string; time: string } | null>(null);
   const [populating, setPopulating] = useState(false);
+  const [activeDayIdx, setActiveDayIdx] = useState<number>(() => {
+    const day = new Date().getDay();
+    return day === 0 ? 6 : day - 1; // 0 (Mon) to 6 (Sun)
+  });
 
   async function populateFromTemplate() {
     if (!supabase) return;
@@ -518,8 +522,8 @@ function ScheduleTab() {
         </button>
       </div>
 
-      {/* Grid */}
-      <div className="overflow-x-auto">
+      {/* Masaüstü Görünüm (md:block) */}
+      <div className="hidden md:block overflow-x-auto">
         <table className="w-full border-collapse text-xs">
           <thead>
             <tr>
@@ -585,6 +589,89 @@ function ScheduleTab() {
             ))}
           </tbody>
         </table>
+      </div>
+
+      {/* Mobil Görünüm (md:hidden) */}
+      <div className="block md:hidden space-y-4">
+        {/* Gün Seçici */}
+        <div className="flex items-stretch border border-foreground/10 bg-background mb-4">
+          {days.map((d, i) => {
+            const isActive = i === activeDayIdx;
+            const dayIdx = d.getDay();
+            const dateISO = isoDate(d);
+            return (
+              <button
+                key={dateISO}
+                onClick={() => setActiveDayIdx(i)}
+                className={cn(
+                  "flex-1 flex flex-col items-center justify-center py-3 px-1 transition text-center border-r border-foreground/10 last:border-r-0",
+                  isActive ? "bg-foreground text-background" : "hover:bg-muted"
+                )}
+              >
+                <span className="text-[0.58rem] uppercase tracking-[0.1em] opacity-70">
+                  {DAY_SHORT[dayIdx]}
+                </span>
+                <span className="font-serif text-[1rem] mt-0.5">{d.getDate()}</span>
+              </button>
+            );
+          })}
+        </div>
+
+        {/* Seçili Günün Slot Listesi */}
+        <div className="space-y-3">
+          {HOURS.map((hour) => {
+            const dateISO = isoDate(days[activeDayIdx]);
+            const slot = findSlot(dateISO, hour);
+            return (
+              <div key={hour} className="flex items-center gap-3 bg-background border border-foreground/10 p-3">
+                <div className="font-mono text-[0.8rem] font-medium text-foreground/70 w-12 flex-shrink-0">
+                  {hour}
+                </div>
+                <div className="flex-1">
+                  {slot ? (
+                    <button
+                      onClick={() => setEditing(slot)}
+                      className={cn(
+                        "w-full text-left p-3 transition hover:opacity-90 flex items-center justify-between gap-2 border",
+                        SLOT_STATUS_BG[slot.status]
+                      )}
+                    >
+                      <div>
+                        <div className="text-[0.62rem] uppercase tracking-[0.12em] font-semibold opacity-80">
+                          {SLOT_STATUS_LABEL[slot.status]}
+                        </div>
+                        {slot.class_slug && (
+                          <div className="text-[0.8rem] font-serif tracking-tight mt-0.5">
+                            {classes.find((c) => c.slug === slot.class_slug)?.title_tr ?? slot.class_slug}
+                          </div>
+                        )}
+                        {slot.notes && (
+                          <div className="text-[0.65rem] text-foreground/60 italic mt-0.5 line-clamp-1">
+                            {slot.notes}
+                          </div>
+                        )}
+                      </div>
+                      <div className="text-right flex-shrink-0">
+                        {slot.capacity > 1 && (
+                          <span className="text-[0.7rem] bg-foreground/10 px-2 py-0.5 font-medium">
+                            {slot.booked_count} / {slot.capacity}
+                          </span>
+                        )}
+                      </div>
+                    </button>
+                  ) : (
+                    <button
+                      onClick={() => setCreating({ date: dateISO, time: hour })}
+                      className="w-full text-left p-3 text-[0.7rem] uppercase tracking-[0.15em] border border-dashed border-foreground/20 text-foreground/40 hover:bg-muted hover:text-foreground transition text-center"
+                    >
+                      + Slot Ekle
+                    </button>
+                  )}
+                </div>
+              </div>
+            );
+          })}
+        </div>
       </div>
 
       {/* Modallar */}
@@ -1042,6 +1129,7 @@ function TemplateTab() {
   const [classes, setClasses] = useState<{ slug: string; title_tr: string }[]>([]);
   const [editing, setEditing] = useState<DbTemplateSlot | null>(null);
   const [creating, setCreating] = useState<{ dayOfWeek: number; time: string } | null>(null);
+  const [activeDayIdx, setActiveDayIdx] = useState(0);
 
   const HOURS = Array.from({ length: 18 }, (_, i) => String(i + 6).padStart(2, "0") + ":00");
   const DAYS = [
@@ -1093,7 +1181,8 @@ function TemplateTab() {
         </p>
       </div>
 
-      <div className="overflow-x-auto">
+      {/* Masaüstü Görünüm (md:block) */}
+      <div className="hidden md:block overflow-x-auto">
         <table className="w-full border-collapse text-xs">
           <thead>
             <tr>
@@ -1157,6 +1246,86 @@ function TemplateTab() {
             ))}
           </tbody>
         </table>
+      </div>
+
+      {/* Mobil Görünüm (md:hidden) */}
+      <div className="block md:hidden space-y-4">
+        {/* Gün Seçici */}
+        <div className="flex items-stretch border border-foreground/10 bg-background mb-4">
+          {DAYS.map((d, i) => {
+            const isActive = i === activeDayIdx;
+            return (
+              <button
+                key={d.val}
+                onClick={() => setActiveDayIdx(i)}
+                className={cn(
+                  "flex-1 flex flex-col items-center justify-center py-3 px-1 transition text-center border-r border-foreground/10 last:border-r-0",
+                  isActive ? "bg-foreground text-background" : "hover:bg-muted"
+                )}
+              >
+                <span className="text-[0.58rem] uppercase tracking-[0.1em] opacity-70">
+                  {d.label.slice(0, 3)}
+                </span>
+              </button>
+            );
+          })}
+        </div>
+
+        {/* Seçili Günün Şablon Listesi */}
+        <div className="space-y-3">
+          {HOURS.map((hour) => {
+            const currentDay = DAYS[activeDayIdx];
+            const tplSlot = findTemplateSlot(currentDay.val, hour);
+            return (
+              <div key={hour} className="flex items-center gap-3 bg-background border border-foreground/10 p-3">
+                <div className="font-mono text-[0.8rem] font-medium text-foreground/70 w-12 flex-shrink-0">
+                  {hour}
+                </div>
+                <div className="flex-1">
+                  {tplSlot ? (
+                    <button
+                      onClick={() => setEditing(tplSlot)}
+                      className={cn(
+                        "w-full text-left p-3 transition hover:opacity-90 flex items-center justify-between gap-2 border",
+                        SLOT_STATUS_BG[tplSlot.status]
+                      )}
+                    >
+                      <div>
+                        <div className="text-[0.62rem] uppercase tracking-[0.12em] font-semibold opacity-80">
+                          {SLOT_STATUS_LABEL[tplSlot.status]}
+                        </div>
+                        {tplSlot.class_slug && (
+                          <div className="text-[0.8rem] font-serif tracking-tight mt-0.5">
+                            {classes.find((c) => c.slug === tplSlot.class_slug)?.title_tr ?? tplSlot.class_slug}
+                          </div>
+                        )}
+                        {tplSlot.notes && (
+                          <div className="text-[0.65rem] text-foreground/60 italic mt-0.5 line-clamp-1">
+                            {tplSlot.notes}
+                          </div>
+                        )}
+                      </div>
+                      <div className="text-right flex-shrink-0">
+                        {tplSlot.capacity > 1 && (
+                          <span className="text-[0.7rem] bg-foreground/10 px-2 py-0.5 font-medium">
+                            Kapasite: {tplSlot.capacity}
+                          </span>
+                        )}
+                      </div>
+                    </button>
+                  ) : (
+                    <button
+                      onClick={() => setCreating({ dayOfWeek: currentDay.val, time: hour })}
+                      className="w-full text-left p-3 text-[0.7rem] uppercase tracking-[0.15em] border border-dashed border-foreground/20 text-foreground/40 hover:bg-muted hover:text-foreground transition text-center"
+                    >
+                      + Şablon Ekle
+                    </button>
+                  )}
+                </div>
+              </div>
+            );
+          })}
+        </div>
       </div>
 
       {editing && (
