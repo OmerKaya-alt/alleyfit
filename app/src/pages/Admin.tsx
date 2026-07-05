@@ -581,6 +581,22 @@ function SlotEditModal({
           });
         }
         await supabase.from("slots").insert(slotsToInsert);
+
+        // Bu dersi kalıcı haftalık şablona (template_slots) da otomatik olarak kaydet
+        const baseDateObj = new Date(newSlotDateTime.date + "T00:00:00");
+        const dayOfWeek = baseDateObj.getDay();
+        await supabase.from("template_slots").upsert({
+          day_of_week: dayOfWeek,
+          time: newSlotDateTime.time,
+          duration_min: 50,
+          class_slug: classSlug || null,
+          instructor_id: instructorId || null,
+          status,
+          capacity,
+          notes: notes || null,
+        }, {
+          onConflict: "day_of_week,time,instructor_id"
+        });
       } else {
         await supabase.from("slots").insert({
           ...payload,
