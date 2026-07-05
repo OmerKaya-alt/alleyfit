@@ -62,6 +62,7 @@ const SLOT_STATUS_BG: Record<SlotStatus, string> = {
 
 export default function Admin() {
   const [email, setEmail] = useState<string | null>(null);
+  const [dbAdminEmails, setDbAdminEmails] = useState<string[]>([]);
   const [checking, setChecking] = useState(true);
   const [tab, setTab] = useState<Tab>("schedule");
 
@@ -72,14 +73,40 @@ export default function Admin() {
       return;
     }
     let active = true;
-    supabase.auth.getSession().then(({ data }) => {
+
+    async function checkAuth() {
+      // 1) Session
+      const { data } = await supabase!.auth.getSession();
+      const currentEmail = data.session?.user.email?.toLowerCase() ?? null;
+
+      // 2) Fetch dynamic admin emails from DB
+      const { data: dbAdmins } = await supabase!
+        .from("admin_emails")
+        .select("email");
+
       if (!active) return;
-      setEmail(data.session?.user.email?.toLowerCase() ?? null);
+
+      const emailsList = (dbAdmins as { email: string }[])?.map((a) => a.email.toLowerCase()) ?? [];
+      setDbAdminEmails(emailsList);
+      setEmail(currentEmail);
       setChecking(false);
+    }
+
+    void checkAuth();
+
+    const { data: sub } = supabase.auth.onAuthStateChange(async (_e, session) => {
+      const currentEmail = session?.user.email?.toLowerCase() ?? null;
+      const { data: dbAdmins } = await supabase!
+        .from("admin_emails")
+        .select("email");
+      const emailsList = (dbAdmins as { email: string }[])?.map((a) => a.email.toLowerCase()) ?? [];
+
+      if (active) {
+        setDbAdminEmails(emailsList);
+        setEmail(currentEmail);
+      }
     });
-    const { data: sub } = supabase.auth.onAuthStateChange((_e, session) => {
-      setEmail(session?.user.email?.toLowerCase() ?? null);
-    });
+
     return () => {
       active = false;
       sub.subscription.unsubscribe();
@@ -92,7 +119,10 @@ export default function Admin() {
   if (checking) {
     return <FullScreenMessage text="Yükleniyor…" />;
   }
-  if (!email || !ADMIN_EMAILS.includes(email)) {
+
+  const isAuthorized = email && (ADMIN_EMAILS.includes(email) || dbAdminEmails.includes(email));
+
+  if (!email || !isAuthorized) {
     return <LoginScreen unauthorizedEmail={email} />;
   }
 
