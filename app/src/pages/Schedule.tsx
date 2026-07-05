@@ -74,10 +74,12 @@ function localISODate(date = new Date()) {
 function mergeSlots(primary: DbSlot[], fallback: DbSlot[]) {
   const map = new Map<string, DbSlot>();
   for (const slot of fallback) {
-    map.set(`${slot.date} ${slot.time}`, slot);
+    const timeKey = slot.time.slice(0, 5);
+    map.set(`${slot.date} ${timeKey}`, slot);
   }
   for (const slot of primary) {
-    map.set(`${slot.date} ${slot.time}`, slot);
+    const timeKey = slot.time.slice(0, 5);
+    map.set(`${slot.date} ${timeKey}`, slot);
   }
   return [...map.values()].sort((a, b) => {
     const byDate = a.date.localeCompare(b.date);
