@@ -606,7 +606,42 @@ function SlotEditModal({
         });
       }
     } else if (slot) {
-      await supabase.from("slots").update(payload).eq("id", slot.id);
+      if (isRecurring) {
+        // 1) Mevcut slotu güncelle
+        await supabase.from("slots").update(payload).eq("id", slot.id);
+
+        // 2) Sonraki N-1 hafta için yeni slotlar ekle
+        const slotsToInsert = [];
+        for (let i = 1; i < recurringWeeks; i++) {
+          const dateObj = new Date(slot.date + "T00:00:00");
+          const nextDateObj = addDays(dateObj, i * 7);
+          slotsToInsert.push({
+            ...payload,
+            date: isoDate(nextDateObj),
+            time: slot.time,
+            duration_min: 50,
+          });
+        }
+        await supabase.from("slots").insert(slotsToInsert);
+
+        // 3) Kalıcı haftalık şablona da kaydet
+        const baseDateObj = new Date(slot.date + "T00:00:00");
+        const dayOfWeek = baseDateObj.getDay();
+        await supabase.from("template_slots").upsert({
+          day_of_week: dayOfWeek,
+          time: slot.time,
+          duration_min: 50,
+          class_slug: classSlug || null,
+          instructor_id: instructorId || null,
+          status,
+          capacity,
+          notes: notes || null,
+        }, {
+          onConflict: "day_of_week,time,instructor_id"
+        });
+      } else {
+        await supabase.from("slots").update(payload).eq("id", slot.id);
+      }
     }
     setSaving(false);
     onSaved();
@@ -701,40 +736,38 @@ function SlotEditModal({
             />
           </label>
 
-          {isNew && (
-            <div className="space-y-4 pt-4 border-t border-foreground/10">
-              <label className="flex items-center gap-2 cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={isRecurring}
-                  onChange={(e) => setIsRecurring(e.target.checked)}
-                  className="rounded-none border-foreground/30 text-foreground focus:ring-0 w-4 h-4 cursor-pointer"
-                />
-                <span className="text-[0.7rem] uppercase tracking-[0.22em] text-vc-accent select-none cursor-pointer">
-                  Yinele (Her hafta tekrar et)
-                </span>
-              </label>
+          <div className="space-y-4 pt-4 border-t border-foreground/10">
+            <label className="flex items-center gap-2 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={isRecurring}
+                onChange={(e) => setIsRecurring(e.target.checked)}
+                className="rounded-none border-foreground/30 text-foreground focus:ring-0 w-4 h-4 cursor-pointer"
+              />
+              <span className="text-[0.7rem] uppercase tracking-[0.22em] text-vc-accent select-none cursor-pointer">
+                Yinele (Her hafta tekrar et)
+              </span>
+            </label>
 
-              {isRecurring && (
-                <label className="block">
-                  <span className="text-[0.7rem] uppercase tracking-[0.22em] text-vc-accent">
-                    Tekrar Sayısı (Hafta)
-                  </span>
-                  <select
-                    value={recurringWeeks}
-                    onChange={(e) => setRecurringWeeks(Number(e.target.value))}
-                    className="mt-2 w-full bg-transparent border-b border-foreground/30 py-2 outline-none"
-                  >
-                    {[2, 3, 4, 6, 8, 12].map((num) => (
-                      <option key={num} value={num}>
-                        {num} Hafta
-                      </option>
-                    ))}
-                  </select>
-                </label>
-              )}
-            </div>
-          )}
+            {isRecurring && (
+              <label className="block">
+                <span className="text-[0.7rem] uppercase tracking-[0.22em] text-vc-accent">
+                  Tekrar Sayısı (Hafta)
+                </span>
+                <select
+                  value={recurringWeeks}
+                  onChange={(e) => setRecurringWeeks(Number(e.target.value))}
+                  className="mt-2 w-full bg-transparent border-b border-foreground/30 py-2 outline-none"
+                >
+                  {[2, 3, 4, 6, 8, 12].map((num) => (
+                    <option key={num} value={num}>
+                      {num} Hafta
+                    </option>
+                  ))}
+                </select>
+              </label>
+            )}
+          </div>
         </div>
 
         <div className="mt-8 flex items-center justify-between gap-3">
