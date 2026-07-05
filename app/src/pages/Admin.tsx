@@ -10,6 +10,7 @@ import {
   type SlotStatus,
 } from "@/lib/supabase";
 import { cn } from "@/lib/utils";
+import { WEEKLY_TEMPLATE } from "@/data/fallbackSchedule";
 
 /* ==================================================================== */
 /*  Alleyfit Admin Panel                                                  */
@@ -268,6 +269,62 @@ function ScheduleTab() {
   const [classes, setClasses] = useState<{ slug: string; title_tr: string }[]>([]);
   const [editing, setEditing] = useState<DbSlot | null>(null);
   const [creating, setCreating] = useState<{ date: string; time: string } | null>(null);
+  const [populating, setPopulating] = useState(false);
+
+  async function populateFromTemplate() {
+    if (!supabase) return;
+    if (
+      !confirm(
+        "Bu işlem seçili haftadaki boş saatleri varsayılan şablonla dolduracaktır. Emin misiniz?"
+      )
+    )
+      return;
+
+    setPopulating(true);
+    try {
+      const slotsToInsert = [];
+      const defaultInstructorId = "11111111-1111-1111-1111-111111111111"; // Aleyna Vurmaz ID
+
+      for (const day of days) {
+        const iso = isoDate(day);
+        const dayIdx = day.getDay();
+        const template = WEEKLY_TEMPLATE[dayIdx] ?? [];
+
+        for (const tpl of template) {
+          const exists = findSlot(iso, tpl.time);
+          if (!exists) {
+            slotsToInsert.push({
+              date: iso,
+              time: tpl.time,
+              duration_min: tpl.status === "spinning" ? 45 : 50,
+              class_slug: tpl.classSlug,
+              instructor_id: defaultInstructorId,
+              status: tpl.status,
+              capacity: tpl.capacity,
+              booked_count: 0,
+              notes: null,
+            });
+          }
+        }
+      }
+
+      if (slotsToInsert.length > 0) {
+        const { error } = await supabase.from("slots").insert(slotsToInsert);
+        if (error) {
+          alert("Şablon yüklenirken hata oluştu: " + error.message);
+        } else {
+          alert(`${slotsToInsert.length} adet slot başarıyla oluşturuldu.`);
+          void loadWeek();
+        }
+      } else {
+        alert("Bu haftadaki tüm slotlar zaten tanımlı.");
+      }
+    } catch (err: any) {
+      alert("Hata: " + err.message);
+    } finally {
+      setPopulating(false);
+    }
+  }
 
   const HOURS = Array.from({ length: 18 }, (_, i) => String(i + 6).padStart(2, "0") + ":00");
   const days = useMemo(() => {
@@ -332,6 +389,17 @@ function ScheduleTab() {
           className="text-[0.78rem] uppercase tracking-[0.18em] text-foreground/60 hover:text-foreground transition"
         >
           Sonraki Hafta →
+        </button>
+      </div>
+
+      {/* Hızlı Eylemler */}
+      <div className="flex justify-end mb-4">
+        <button
+          onClick={populateFromTemplate}
+          disabled={populating}
+          className="rounded-none border border-foreground/20 text-foreground/75 px-4 py-2 text-[0.7rem] uppercase tracking-[0.18em] hover:border-foreground hover:text-foreground disabled:opacity-50 transition"
+        >
+          {populating ? "Şablon Uygulanıyor..." : "Şablondan Haftayı Doldur"}
         </button>
       </div>
 
@@ -458,6 +526,8 @@ function SlotEditModal({
   const [capacity, setCapacity] = useState<number>(slot?.capacity ?? 12);
   const [notes, setNotes] = useState<string>(slot?.notes ?? "");
   const [saving, setSaving] = useState(false);
+  const [isRecurring, setIsRecurring] = useState(false);
+  const [recurringWeeks, setRecurringWeeks] = useState(4);
 
   async function save() {
     if (!supabase) return;
@@ -470,12 +540,27 @@ function SlotEditModal({
       notes: notes || null,
     };
     if (isNew && newSlotDateTime) {
-      await supabase.from("slots").insert({
-        ...payload,
-        date: newSlotDateTime.date,
-        time: newSlotDateTime.time,
-        duration_min: 50,
-      });
+      if (isRecurring) {
+        const slotsToInsert = [];
+        for (let i = 0; i < recurringWeeks; i++) {
+          const dateObj = new Date(newSlotDateTime.date + "T00:00:00");
+          const nextDateObj = addDays(dateObj, i * 7);
+          slotsToInsert.push({
+            ...payload,
+            date: isoDate(nextDateObj),
+            time: newSlotDateTime.time,
+            duration_min: 50,
+          });
+        }
+        await supabase.from("slots").insert(slotsToInsert);
+      } else {
+        await supabase.from("slots").insert({
+          ...payload,
+          date: newSlotDateTime.date,
+          time: newSlotDateTime.time,
+          duration_min: 50,
+        });
+      }
     } else if (slot) {
       await supabase.from("slots").update(payload).eq("id", slot.id);
     }
@@ -571,6 +656,41 @@ function SlotEditModal({
               className="mt-2 w-full bg-transparent border-b border-foreground/30 py-2 outline-none resize-none"
             />
           </label>
+
+          {isNew && (
+            <div className="space-y-4 pt-4 border-t border-foreground/10">
+              <label className="flex items-center gap-2 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={isRecurring}
+                  onChange={(e) => setIsRecurring(e.target.checked)}
+                  className="rounded-none border-foreground/30 text-foreground focus:ring-0 w-4 h-4 cursor-pointer"
+                />
+                <span className="text-[0.7rem] uppercase tracking-[0.22em] text-vc-accent select-none cursor-pointer">
+                  Yinele (Her hafta tekrar et)
+                </span>
+              </label>
+
+              {isRecurring && (
+                <label className="block">
+                  <span className="text-[0.7rem] uppercase tracking-[0.22em] text-vc-accent">
+                    Tekrar Sayısı (Hafta)
+                  </span>
+                  <select
+                    value={recurringWeeks}
+                    onChange={(e) => setRecurringWeeks(Number(e.target.value))}
+                    className="mt-2 w-full bg-transparent border-b border-foreground/30 py-2 outline-none"
+                  >
+                    {[2, 3, 4, 6, 8, 12].map((num) => (
+                      <option key={num} value={num}>
+                        {num} Hafta
+                      </option>
+                    ))}
+                  </select>
+                </label>
+              )}
+            </div>
+          )}
         </div>
 
         <div className="mt-8 flex items-center justify-between gap-3">

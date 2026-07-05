@@ -17,7 +17,6 @@ import type { DbSlot, SlotStatus } from "@/lib/supabase";
  *  slotları diledikçe günceller, canlı veri şablonun üstüne biner.
  * ================================================================== */
 
-const GROUP_CAPACITY = 12;
 const EPOCH = new Date(0).toISOString();
 
 type Tpl = {
@@ -33,42 +32,42 @@ const open = (time: string): Tpl => ({
   time,
   status: "open",
   classSlug: null,
-  capacity: GROUP_CAPACITY,
+  capacity: 6,
   booked: 0,
 });
 const priv = (time: string): Tpl => ({
   time,
-  status: "private",
+  status: "open",
   classSlug: "ozel",
   capacity: 1,
-  booked: 1,
+  booked: 0,
 });
 const couple = (time: string): Tpl => ({
   time,
-  status: "couple",
+  status: "open",
   classSlug: "cadillac",
   capacity: 2,
-  booked: 2,
+  booked: 0,
 });
 const groupFull = (time: string): Tpl => ({
   time,
-  status: "group_full",
+  status: "group_open",
   classSlug: "reformer",
-  capacity: GROUP_CAPACITY,
-  booked: GROUP_CAPACITY,
+  capacity: 6,
+  booked: 0,
 });
-const groupOpen = (time: string, booked: number): Tpl => ({
+const groupOpen = (time: string, _booked?: number): Tpl => ({
   time,
   status: "group_open",
   classSlug: "reformer",
-  capacity: GROUP_CAPACITY,
-  booked,
+  capacity: 6,
+  booked: 0,
 });
 const spinning = (time: string): Tpl => ({
   time,
   status: "spinning",
   classSlug: "spinning",
-  capacity: GROUP_CAPACITY,
+  capacity: 12,
   booked: 0,
 });
 

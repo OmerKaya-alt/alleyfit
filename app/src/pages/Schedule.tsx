@@ -16,6 +16,16 @@ import {
 
 const WHATSAPP_NUMBER = "905366711793";
 
+const defaultInstructor: DbInstructor = {
+  id: "11111111-1111-1111-1111-111111111111",
+  name: "Aleyna Vurmaz",
+  role: "Reformer · Mat · Cadillac · Spinning · Prenatal · Özel",
+  email: "aleynavrmaz@gmail.com",
+  color: "#c89889",
+  active: true,
+  created_at: "",
+};
+
 /* ==================================================================== */
 /*  Public Schedule sayfası — Supabase live data + rezervasyon modal     */
 /* ==================================================================== */
@@ -293,7 +303,7 @@ export default function Schedule() {
                     <SlotRow
                       key={s.id}
                       slot={s}
-                      instructor={instructors.find((i) => i.id === s.instructor_id)}
+                      instructor={instructors.find((i) => i.id === s.instructor_id) ?? defaultInstructor}
                       onReserve={() => setReserveSlot(s)}
                       lang={lang}
                       tRoom={t("schedule.roomLabel")}
@@ -310,7 +320,7 @@ export default function Schedule() {
       {reserveSlot && (
         <ReserveModal
           slot={reserveSlot}
-          instructor={instructors.find((i) => i.id === reserveSlot.instructor_id)}
+          instructor={instructors.find((i) => i.id === reserveSlot.instructor_id) ?? defaultInstructor}
           onClose={() => setReserveSlot(null)}
           lang={lang}
         />
