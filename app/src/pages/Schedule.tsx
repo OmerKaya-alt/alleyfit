@@ -453,17 +453,38 @@ function ReserveModal({
     setError(null);
     setSubmitting(true);
 
-    // Şablon (fallback) slot id'si "tpl-" ile başlar — DB'de gerçek kaydı yok,
-    // Supabase'e yazılamaz. Yalnızca admin panelinden girilen gerçek (UUID)
-    // slotlar reservations tablosuna kaydedilir; şablon slotlar WhatsApp'tan gider.
     const isRealSlot = !slot.id.startsWith("tpl-");
+    let realSlotId = slot.id;
 
-    // Pending kaydı sisteme yazmaya çalış. Başarısız olsa bile WhatsApp akışı
-    // engellenmez — rezervasyonun gerçek onayı zaten WhatsApp üzerinden yapılıyor,
-    // DB kaydı yalnızca admin paneli için bir kolaylık. Hata konsola düşer.
-    if (supabase && isRealSlot) {
+    if (supabase && !isRealSlot) {
+      // Şablon slotunun veritabanında kaydı yok, önce slotu oluştur
+      const { data: newSlot, error: slotErr } = await supabase
+        .from("slots")
+        .insert({
+          date: slot.date,
+          time: slot.time,
+          duration_min: slot.duration_min || 50,
+          class_slug: slot.class_slug,
+          instructor_id: slot.instructor_id || "11111111-1111-1111-1111-111111111111", // Aleyna Vurmaz ID
+          status: slot.status,
+          capacity: slot.capacity,
+          booked_count: 0,
+          notes: slot.notes || null,
+        })
+        .select()
+        .single();
+
+      if (slotErr) {
+        console.error("Ders slotu oluşturulamadı:", slotErr.message);
+      } else if (newSlot) {
+        realSlotId = newSlot.id;
+      }
+    }
+
+    // Pending kaydı sisteme yaz.
+    if (supabase && (isRealSlot || realSlotId !== slot.id)) {
       const { error: err } = await supabase.from("reservations").insert({
-        slot_id: slot.id,
+        slot_id: realSlotId,
         member_name: name.trim(),
         member_phone: phone.trim(),
         message: message.trim() || null,
