@@ -32,6 +32,14 @@ export type DbTemplateSlot = {
   updated_at: string;
 };
 
+export type DbTemplateReservation = {
+  id: string;
+  template_slot_id: string;
+  member_name: string;
+  member_phone: string | null;
+  created_at: string;
+};
+
 const SLOT_STATUS_LABEL: Record<SlotStatus, string> = {
   open: "Boş",
   group_open: "Grup (kontenjan var)",
@@ -337,10 +345,52 @@ function ScheduleTab() {
       }
 
       if (slotsToInsert.length > 0) {
-        const { error } = await supabase.from("slots").insert(slotsToInsert);
+        const { data: insertedSlots, error } = await supabase
+          .from("slots")
+          .insert(slotsToInsert)
+          .select();
+
         if (error) {
           alert("Şablon yüklenirken hata oluştu: " + error.message);
         } else {
+          // Kalıcı şablon katılımcılarını kopyala
+          const { data: tplReservations } = await supabase
+            .from("template_reservations")
+            .select("*");
+
+          if (insertedSlots && tplReservations && tplReservations.length > 0) {
+            const reservationsToInsert = [];
+            for (const slot of insertedSlots) {
+              const dateObj = new Date(slot.date + "T00:00:00");
+              const dayOfWeek = dateObj.getDay();
+
+              // Bu slotun dayOfWeek ve saatine uyan template slotunu bul
+              const matchingTplSlot = tplSlots.find(
+                (ts) => ts.day_of_week === dayOfWeek && ts.time.startsWith(slot.time.slice(0, 5))
+              );
+
+              if (matchingTplSlot) {
+                const matchingTplRes = tplReservations.filter(
+                  (tr) => tr.template_slot_id === matchingTplSlot.id
+                );
+
+                for (const tplRes of matchingTplRes) {
+                  reservationsToInsert.push({
+                    slot_id: slot.id,
+                    member_name: tplRes.member_name,
+                    member_phone: tplRes.member_phone,
+                    status: "confirmed",
+                    confirmed_at: new Date().toISOString(),
+                  });
+                }
+              }
+            }
+
+            if (reservationsToInsert.length > 0) {
+              await supabase.from("reservations").insert(reservationsToInsert);
+            }
+          }
+
           alert(`${slotsToInsert.length} adet slot başarıyla oluşturuldu.`);
           void loadWeek();
         }
@@ -581,6 +631,13 @@ function SlotEditModal({
     }
   }, [slot]);
 
+  useEffect(() => {
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, []);
+
   async function approveReservation(resId: string) {
     if (!supabase) return;
     const { error } = await supabase
@@ -724,9 +781,9 @@ function SlotEditModal({
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-foreground/40 p-4" onClick={onClose}>
+    <div className="fixed inset-0 z-50 overflow-y-auto bg-foreground/40 p-4 flex justify-center items-start md:items-center" onClick={onClose}>
       <div
-        className="bg-background border border-foreground/20 max-w-md w-full p-8 max-h-[90vh] overflow-y-auto"
+        className="bg-background border border-foreground/20 max-w-md w-full p-8 my-4 md:my-8"
         onClick={(e) => e.stopPropagation()}
       >
         <h3 className="font-serif text-[1.4rem] tracking-[-0.02em]">
@@ -1124,7 +1181,65 @@ function EditTemplateSlotModal({
   const [notes, setNotes] = useState<string>(slot?.notes ?? "");
   const [saving, setSaving] = useState(false);
 
+  // Kalıcı Şablon Katılımcıları states
+  const [reservations, setReservations] = useState<DbTemplateReservation[]>([]);
+  const [loadingRes, setLoadingRes] = useState(false);
+  const [newMemberName, setNewMemberName] = useState("");
+  const [newMemberPhone, setNewMemberPhone] = useState("");
+
   const DAYS_LABEL = ["Pazar", "Pazartesi", "Salı", "Çarşamba", "Perşembe", "Cuma", "Cumartesi"];
+
+  async function loadReservations() {
+    if (!supabase || !slot?.id) return;
+    setLoadingRes(true);
+    const { data } = await supabase
+      .from("template_reservations")
+      .select("*")
+      .eq("template_slot_id", slot.id)
+      .order("created_at");
+    setReservations((data as DbTemplateReservation[]) ?? []);
+    setLoadingRes(false);
+  }
+
+  useEffect(() => {
+    if (slot?.id) {
+      void loadReservations();
+    }
+  }, [slot]);
+
+  useEffect(() => {
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, []);
+
+  async function removeReservation(resId: string) {
+    if (!supabase) return;
+    if (!confirm("Bu kalıcı katılımcıyı şablondan silmek istediğinize emin misiniz?")) return;
+    const { error } = await supabase.from("template_reservations").delete().eq("id", resId);
+    if (error) {
+      alert("Hata: " + error.message);
+    } else {
+      void loadReservations();
+    }
+  }
+
+  async function addReservation() {
+    if (!supabase || !slot?.id) return;
+    const { error } = await supabase.from("template_reservations").insert({
+      template_slot_id: slot.id,
+      member_name: newMemberName.trim(),
+      member_phone: newMemberPhone.trim() || null,
+    });
+    if (error) {
+      alert("Hata: " + error.message);
+    } else {
+      setNewMemberName("");
+      setNewMemberPhone("");
+      void loadReservations();
+    }
+  }
 
   async function save() {
     if (!supabase) return;
@@ -1158,9 +1273,9 @@ function EditTemplateSlotModal({
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-foreground/40 p-4" onClick={onClose}>
+    <div className="fixed inset-0 z-50 overflow-y-auto bg-foreground/40 p-4 flex justify-center items-start md:items-center" onClick={onClose}>
       <div
-        className="bg-background border border-foreground/20 max-w-md w-full p-8"
+        className="bg-background border border-foreground/20 max-w-md w-full p-8 my-4 md:my-8"
         onClick={(e) => e.stopPropagation()}
       >
         <h3 className="font-serif text-[1.4rem] tracking-[-0.02em]">
@@ -1239,6 +1354,67 @@ function EditTemplateSlotModal({
             />
           </label>
         </div>
+
+        {/* Şablon Katılımcıları Listesi ve Yönetimi */}
+        {slot && (
+          <div className="mt-6 pt-6 border-t border-foreground/10 space-y-4">
+            <h4 className="font-serif text-[1.1rem] tracking-[-0.01em]">Kalıcı Katılımcılar ({reservations.length})</h4>
+            <p className="text-[0.62rem] text-foreground/50 mt-1">
+              Buraya eklediğiniz kişiler, bu şablondan her hafta doldurulduğunda otomatik olarak derse kayıt edilir.
+            </p>
+            
+            {loadingRes ? (
+              <p className="text-[0.7rem] text-foreground/50">Yükleniyor...</p>
+            ) : reservations.length === 0 ? (
+              <p className="text-[0.7rem] text-foreground/40 italic">Bu şablon dersinde henüz kalıcı katılımcı yok.</p>
+            ) : (
+              <div className="space-y-2 max-h-36 overflow-y-auto pr-1">
+                {reservations.map((res) => (
+                  <div key={res.id} className="flex items-center justify-between bg-foreground/5 p-2 text-[0.7rem] border border-foreground/10">
+                    <div>
+                      <span className="font-medium text-foreground">{res.member_name}</span>
+                      {res.member_phone && <span className="text-foreground/50 ml-1">({res.member_phone})</span>}
+                    </div>
+                    <button
+                      onClick={() => removeReservation(res.id)}
+                      className="text-[0.65rem] text-destructive uppercase tracking-[0.1em] hover:underline"
+                    >
+                      Sil
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* Manuel Kalıcı Katılımcı Ekleme Formu */}
+            <div className="bg-foreground/5 p-3 space-y-2 border border-foreground/10">
+              <span className="text-[0.65rem] uppercase tracking-[0.15em] text-vc-accent font-semibold">Kalıcı Katılımcı Ekle</span>
+              <div className="grid grid-cols-2 gap-2">
+                <input
+                  type="text"
+                  placeholder="Adı Soyadı"
+                  value={newMemberName}
+                  onChange={(e) => setNewMemberName(e.target.value)}
+                  className="w-full bg-background border border-foreground/20 px-2 py-1 text-[0.7rem] outline-none"
+                />
+                <input
+                  type="text"
+                  placeholder="Telefon"
+                  value={newMemberPhone}
+                  onChange={(e) => setNewMemberPhone(e.target.value)}
+                  className="w-full bg-background border border-foreground/20 px-2 py-1 text-[0.7rem] outline-none"
+                />
+              </div>
+              <button
+                onClick={addReservation}
+                disabled={!newMemberName.trim()}
+                className="w-full bg-foreground text-background py-1.5 text-[0.65rem] uppercase tracking-[0.15em] hover:opacity-90 disabled:opacity-50 transition"
+              >
+                Şablona Kaydet
+              </button>
+            </div>
+          </div>
+        )}
 
         <div className="mt-8 flex items-center justify-between gap-3">
           <button
