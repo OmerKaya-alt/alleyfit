@@ -21,8 +21,15 @@ export default function LenisProvider({ children }: LenisProviderProps) {
     }
     raf = requestAnimationFrame(onRaf);
 
+    // ResizeObserver ile dinamik yükseklik güncellemelerini yakala (görsel yüklenmeleri vb.)
+    const resizeObserver = new ResizeObserver(() => {
+      lenis.resize();
+    });
+    resizeObserver.observe(document.body);
+
     return () => {
       cancelAnimationFrame(raf);
+      resizeObserver.disconnect();
       lenis.destroy();
       delete window.__lenis;
     };

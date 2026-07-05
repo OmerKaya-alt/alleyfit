@@ -109,14 +109,14 @@ export default function Admin() {
             </h1>
             <p className="text-foreground/60 text-sm mt-1">{email}</p>
           </div>
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-3 overflow-x-auto max-w-full pb-2 scrollbar-none whitespace-nowrap -mx-4 px-4 lg:mx-0 lg:px-0">
             <TabButton current={tab} setTab={setTab} value="schedule" label="Program" />
             <TabButton current={tab} setTab={setTab} value="reservations" label="Rezervasyonlar" />
             <TabButton current={tab} setTab={setTab} value="instructors" label="Eğitmenler" />
             <TabButton current={tab} setTab={setTab} value="template" label="Şablon Düzenle" />
             <button
               onClick={() => supabase?.auth.signOut()}
-              className="ml-2 text-[0.7rem] uppercase tracking-[0.22em] text-foreground/50 hover:text-foreground transition"
+              className="ml-2 text-[0.7rem] uppercase tracking-[0.22em] text-foreground/50 hover:text-foreground transition flex-shrink-0"
             >
               Çıkış
             </button>
@@ -452,21 +452,21 @@ function ScheduleTab() {
   return (
     <div>
       {/* Hafta navigatörü */}
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex items-center justify-between mb-6 gap-2">
         <button
           onClick={() => setWeekStart((d) => addDays(d, -7))}
-          className="text-[0.78rem] uppercase tracking-[0.18em] text-foreground/60 hover:text-foreground transition"
+          className="text-[0.65rem] sm:text-[0.78rem] uppercase tracking-[0.1em] sm:tracking-[0.18em] text-foreground/60 hover:text-foreground transition flex-shrink-0"
         >
-          ← Önceki Hafta
+          ← <span className="hidden xs:inline">Önceki Hafta</span><span className="inline xs:hidden">Önceki</span>
         </button>
-        <span className="font-serif text-[1.4rem] tracking-[-0.01em]">
+        <span className="font-serif text-[0.95rem] xs:text-[1.1rem] sm:text-[1.4rem] tracking-[-0.01em] whitespace-nowrap text-center px-1">
           {formatDateTR(days[0])} — {formatDateTR(days[6])}
         </span>
         <button
           onClick={() => setWeekStart((d) => addDays(d, 7))}
-          className="text-[0.78rem] uppercase tracking-[0.18em] text-foreground/60 hover:text-foreground transition"
+          className="text-[0.65rem] sm:text-[0.78rem] uppercase tracking-[0.1em] sm:tracking-[0.18em] text-foreground/60 hover:text-foreground transition flex-shrink-0"
         >
-          Sonraki Hafta →
+          <span className="hidden xs:inline">Sonraki Hafta</span><span className="inline xs:hidden">Sonraki</span> →
         </button>
       </div>
 
@@ -475,7 +475,7 @@ function ScheduleTab() {
         <button
           onClick={populateFromTemplate}
           disabled={populating}
-          className="rounded-none border border-foreground/20 text-foreground/75 px-4 py-2 text-[0.7rem] uppercase tracking-[0.18em] hover:border-foreground hover:text-foreground disabled:opacity-50 transition"
+          className="rounded-none border border-foreground/20 text-foreground/75 px-3 py-1.5 sm:px-4 sm:py-2 text-[0.62rem] sm:text-[0.7rem] uppercase tracking-[0.12em] sm:tracking-[0.18em] hover:border-foreground hover:text-foreground disabled:opacity-50 transition"
         >
           {populating ? "Şablon Uygulanıyor..." : "Şablondan Haftayı Doldur"}
         </button>
@@ -1701,7 +1701,7 @@ function TabButton({
     <button
       onClick={() => setTab(value)}
       className={cn(
-        "px-4 py-2 text-[0.7rem] uppercase tracking-[0.22em] border transition",
+        "px-4 py-2 text-[0.7rem] uppercase tracking-[0.22em] border transition flex-shrink-0 whitespace-nowrap",
         active
           ? "border-foreground bg-foreground text-background"
           : "border-foreground/20 text-foreground/60 hover:border-foreground",
