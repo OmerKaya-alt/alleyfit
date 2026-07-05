@@ -781,9 +781,9 @@ function SlotEditModal({
   }
 
   return (
-    <div className="fixed inset-0 z-50 overflow-y-auto bg-foreground/40 p-4 flex justify-center items-start md:items-center" onClick={onClose}>
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-foreground/40 p-4" onClick={onClose}>
       <div
-        className="bg-background border border-foreground/20 max-w-md w-full p-8 my-4 md:my-8"
+        className="bg-background border border-foreground/20 max-w-md w-full p-8 max-h-[85vh] overflow-y-auto"
         onClick={(e) => e.stopPropagation()}
       >
         <h3 className="font-serif text-[1.4rem] tracking-[-0.02em]">
@@ -1273,9 +1273,9 @@ function EditTemplateSlotModal({
   }
 
   return (
-    <div className="fixed inset-0 z-50 overflow-y-auto bg-foreground/40 p-4 flex justify-center items-start md:items-center" onClick={onClose}>
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-foreground/40 p-4" onClick={onClose}>
       <div
-        className="bg-background border border-foreground/20 max-w-md w-full p-8 my-4 md:my-8"
+        className="bg-background border border-foreground/20 max-w-md w-full p-8 max-h-[85vh] overflow-y-auto"
         onClick={(e) => e.stopPropagation()}
       >
         <h3 className="font-serif text-[1.4rem] tracking-[-0.02em]">
