@@ -632,9 +632,13 @@ function SlotEditModal({
   }, [slot]);
 
   useEffect(() => {
+    const origBody = document.body.style.overflow;
+    const origHtml = document.documentElement.style.overflow;
     document.body.style.overflow = "hidden";
+    document.documentElement.style.overflow = "hidden";
     return () => {
-      document.body.style.overflow = "";
+      document.body.style.overflow = origBody;
+      document.documentElement.style.overflow = origHtml;
     };
   }, []);
 
@@ -783,7 +787,7 @@ function SlotEditModal({
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-foreground/40 p-4" onClick={onClose}>
       <div
-        className="bg-background border border-foreground/20 max-w-md w-full p-8 max-h-[85vh] overflow-y-auto"
+        className="bg-background border border-foreground/20 max-w-md w-full p-8 max-h-[85vh] overflow-y-auto overscroll-contain"
         onClick={(e) => e.stopPropagation()}
       >
         <h3 className="font-serif text-[1.4rem] tracking-[-0.02em]">
@@ -1208,9 +1212,13 @@ function EditTemplateSlotModal({
   }, [slot]);
 
   useEffect(() => {
+    const origBody = document.body.style.overflow;
+    const origHtml = document.documentElement.style.overflow;
     document.body.style.overflow = "hidden";
+    document.documentElement.style.overflow = "hidden";
     return () => {
-      document.body.style.overflow = "";
+      document.body.style.overflow = origBody;
+      document.documentElement.style.overflow = origHtml;
     };
   }, []);
 
@@ -1275,7 +1283,7 @@ function EditTemplateSlotModal({
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-foreground/40 p-4" onClick={onClose}>
       <div
-        className="bg-background border border-foreground/20 max-w-md w-full p-8 max-h-[85vh] overflow-y-auto"
+        className="bg-background border border-foreground/20 max-w-md w-full p-8 max-h-[85vh] overflow-y-auto overscroll-contain"
         onClick={(e) => e.stopPropagation()}
       >
         <h3 className="font-serif text-[1.4rem] tracking-[-0.02em]">
