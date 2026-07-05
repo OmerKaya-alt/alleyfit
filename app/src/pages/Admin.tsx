@@ -10,14 +10,27 @@ import {
   type SlotStatus,
 } from "@/lib/supabase";
 import { cn } from "@/lib/utils";
-import { WEEKLY_TEMPLATE } from "@/data/fallbackSchedule";
 
 /* ==================================================================== */
 /*  Alleyfit Admin Panel                                                  */
 /*  Tek sayfa: login → tabs (Program · Rezervasyonlar · Eğitmenler)      */
 /* ==================================================================== */
 
-type Tab = "schedule" | "reservations" | "instructors";
+type Tab = "schedule" | "reservations" | "instructors" | "template";
+
+export type DbTemplateSlot = {
+  id: string;
+  day_of_week: number;
+  time: string;
+  duration_min: number;
+  class_slug: string | null;
+  instructor_id: string | null;
+  status: SlotStatus;
+  capacity: number;
+  notes: string | null;
+  created_at: string;
+  updated_at: string;
+};
 
 const SLOT_STATUS_LABEL: Record<SlotStatus, string> = {
   open: "Boş",
@@ -92,6 +105,7 @@ export default function Admin() {
             <TabButton current={tab} setTab={setTab} value="schedule" label="Program" />
             <TabButton current={tab} setTab={setTab} value="reservations" label="Rezervasyonlar" />
             <TabButton current={tab} setTab={setTab} value="instructors" label="Eğitmenler" />
+            <TabButton current={tab} setTab={setTab} value="template" label="Şablon Düzenle" />
             <button
               onClick={() => supabase?.auth.signOut()}
               className="ml-2 text-[0.7rem] uppercase tracking-[0.22em] text-foreground/50 hover:text-foreground transition"
@@ -105,6 +119,7 @@ export default function Admin() {
           {tab === "schedule" && <ScheduleTab />}
           {tab === "reservations" && <ReservationsTab />}
           {tab === "instructors" && <InstructorsTab />}
+          {tab === "template" && <TemplateTab />}
         </main>
 
         <div className="mt-16 text-[0.7rem] uppercase tracking-[0.22em] text-foreground/40">
@@ -275,34 +290,47 @@ function ScheduleTab() {
     if (!supabase) return;
     if (
       !confirm(
-        "Bu işlem seçili haftadaki boş saatleri varsayılan şablonla dolduracaktır. Emin misiniz?"
+        "Bu işlem seçili haftadaki boş saatleri veritabanı şablonuyla dolduracaktır. Emin misiniz?"
       )
     )
       return;
 
     setPopulating(true);
     try {
+      // Şablon slotlarını veritabanından çek
+      const { data: tplSlots, error: tplError } = await supabase
+        .from("template_slots")
+        .select("*");
+      if (tplError) {
+        alert("Haftalık şablon veritabanından çekilemedi: " + tplError.message);
+        return;
+      }
+      if (!tplSlots || tplSlots.length === 0) {
+        alert("Şablon veritabanı boş! Lütfen önce 'Şablon Düzenle' sekmesinden şablon oluşturun.");
+        return;
+      }
+
       const slotsToInsert = [];
       const defaultInstructorId = "11111111-1111-1111-1111-111111111111"; // Aleyna Vurmaz ID
 
       for (const day of days) {
         const iso = isoDate(day);
         const dayIdx = day.getDay();
-        const template = WEEKLY_TEMPLATE[dayIdx] ?? [];
+        const dayTemplates = tplSlots.filter((ts) => ts.day_of_week === dayIdx);
 
-        for (const tpl of template) {
+        for (const tpl of dayTemplates) {
           const exists = findSlot(iso, tpl.time);
           if (!exists) {
             slotsToInsert.push({
               date: iso,
               time: tpl.time,
-              duration_min: tpl.status === "spinning" ? 45 : 50,
-              class_slug: tpl.classSlug,
-              instructor_id: defaultInstructorId,
+              duration_min: tpl.duration_min,
+              class_slug: tpl.class_slug,
+              instructor_id: tpl.instructor_id || defaultInstructorId,
               status: tpl.status,
               capacity: tpl.capacity,
               booked_count: 0,
-              notes: null,
+              notes: tpl.notes,
             });
           }
         }
@@ -691,6 +719,333 @@ function SlotEditModal({
               )}
             </div>
           )}
+        </div>
+
+        <div className="mt-8 flex items-center justify-between gap-3">
+          <button
+            onClick={save}
+            disabled={saving}
+            className="rounded-none bg-foreground text-background px-6 py-3 text-[0.78rem] uppercase tracking-[0.18em] font-medium hover:opacity-90 disabled:opacity-50 transition"
+          >
+            {saving ? "Kaydediliyor…" : "Kaydet"}
+          </button>
+          <div className="flex items-center gap-3">
+            {!isNew && (
+              <button
+                onClick={remove}
+                className="text-[0.78rem] uppercase tracking-[0.18em] text-destructive hover:opacity-80 transition"
+              >
+                Sil
+              </button>
+            )}
+            <button
+              onClick={onClose}
+              className="text-[0.78rem] uppercase tracking-[0.18em] text-foreground/60 hover:text-foreground transition"
+            >
+              İptal
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* -------------------------------------------------------------------- */
+/*  Tab 4 — Şablon Düzenle                                               */
+/* -------------------------------------------------------------------- */
+
+function TemplateTab() {
+  const [slots, setSlots] = useState<DbTemplateSlot[]>([]);
+  const [instructors, setInstructors] = useState<DbInstructor[]>([]);
+  const [classes, setClasses] = useState<{ slug: string; title_tr: string }[]>([]);
+  const [editing, setEditing] = useState<DbTemplateSlot | null>(null);
+  const [creating, setCreating] = useState<{ dayOfWeek: number; time: string } | null>(null);
+
+  const HOURS = Array.from({ length: 18 }, (_, i) => String(i + 6).padStart(2, "0") + ":00");
+  const DAYS = [
+    { label: "Pazartesi", val: 1 },
+    { label: "Salı", val: 2 },
+    { label: "Çarşamba", val: 3 },
+    { label: "Perşembe", val: 4 },
+    { label: "Cuma", val: 5 },
+    { label: "Cumartesi", val: 6 },
+    { label: "Pazar", val: 0 },
+  ];
+
+  async function loadTemplate() {
+    if (!supabase) return;
+    const { data: s } = await supabase
+      .from("template_slots")
+      .select("*")
+      .order("day_of_week")
+      .order("time");
+    setSlots((s as DbTemplateSlot[]) ?? []);
+    const { data: i } = await supabase.from("instructors").select("*").eq("active", true);
+    setInstructors((i as DbInstructor[]) ?? []);
+    const { data: c } = await supabase.from("classes").select("slug,title_tr").order("title_tr");
+    setClasses((c as { slug: string; title_tr: string }[]) ?? []);
+  }
+
+  useEffect(() => {
+    void loadTemplate();
+    if (!supabase) return;
+    const channel = supabase
+      .channel("admin-template-slots")
+      .on("postgres_changes", { event: "*", schema: "public", table: "template_slots" }, () => void loadTemplate())
+      .subscribe();
+    return () => {
+      void supabase?.removeChannel(channel);
+    };
+  }, []);
+
+  function findTemplateSlot(dayOfWeek: number, time: string) {
+    return slots.find((s) => s.day_of_week === dayOfWeek && s.time.startsWith(time));
+  }
+
+  return (
+    <div>
+      <div className="mb-6">
+        <h3 className="font-serif text-[1.4rem] tracking-[-0.01em]">Haftalık Randevu Şablonu</h3>
+        <p className="text-foreground/60 text-xs mt-1">
+          Burada tanımladığınız ders planı, program sayfasında \"Şablondan Haftayı Doldur\" dediğinizde otomatik olarak kopyalanır.
+        </p>
+      </div>
+
+      <div className="overflow-x-auto">
+        <table className="w-full border-collapse text-xs">
+          <thead>
+            <tr>
+              <th className="sticky left-0 bg-background border border-foreground/10 px-2 py-2 text-[0.65rem] uppercase tracking-[0.18em] text-foreground/50 w-16">
+                Saat
+              </th>
+              {DAYS.map((d) => (
+                <th key={d.val} className="border border-foreground/10 px-2 py-2 text-center">
+                  <div className="text-[0.65rem] uppercase tracking-[0.18em] text-foreground/50">
+                    {d.label}
+                  </div>
+                </th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {HOURS.map((hour) => (
+              <tr key={hour}>
+                <td className="sticky left-0 bg-background border border-foreground/10 px-2 py-2 font-mono text-[0.7rem]">
+                  {hour}
+                </td>
+                {DAYS.map((d) => {
+                  const tplSlot = findTemplateSlot(d.val, hour);
+                  return (
+                    <td key={d.val + hour} className="border border-foreground/10 p-1 align-top w-28">
+                      {tplSlot ? (
+                        <button
+                          onClick={() => setEditing(tplSlot)}
+                          className={cn(
+                            "w-full text-left px-2 py-1.5 transition hover:opacity-80",
+                            SLOT_STATUS_BG[tplSlot.status],
+                          )}
+                          title={SLOT_STATUS_LABEL[tplSlot.status]}
+                        >
+                          <div className="text-[0.62rem] uppercase tracking-[0.12em] opacity-80">
+                            {SLOT_STATUS_LABEL[tplSlot.status]}
+                          </div>
+                          {tplSlot.class_slug && (
+                            <div className="text-[0.7rem] font-medium mt-0.5">
+                              {classes.find((c) => c.slug === tplSlot.class_slug)?.title_tr ?? tplSlot.class_slug}
+                            </div>
+                          )}
+                          {tplSlot.capacity > 1 && (
+                            <div className="text-[0.62rem] opacity-70 mt-0.5">
+                              Kapasite: {tplSlot.capacity}
+                            </div>
+                          )}
+                        </button>
+                      ) : (
+                        <button
+                          onClick={() => setCreating({ dayOfWeek: d.val, time: hour })}
+                          className="w-full text-left px-2 py-1.5 text-foreground/30 hover:bg-muted hover:text-foreground transition"
+                        >
+                          + Şablon
+                        </button>
+                      )}
+                    </td>
+                  );
+                })}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+
+      {editing && (
+        <EditTemplateSlotModal
+          slot={editing}
+          instructors={instructors}
+          classes={classes}
+          onClose={() => setEditing(null)}
+          onSaved={() => {
+            setEditing(null);
+            void loadTemplate();
+          }}
+        />
+      )}
+
+      {creating && (
+        <EditTemplateSlotModal
+          newSlotDateTime={creating}
+          instructors={instructors}
+          classes={classes}
+          onClose={() => setCreating(null)}
+          onSaved={() => {
+            setCreating(null);
+            void loadTemplate();
+          }}
+        />
+      )}
+    </div>
+  );
+}
+
+function EditTemplateSlotModal({
+  slot,
+  newSlotDateTime,
+  instructors,
+  classes,
+  onClose,
+  onSaved,
+}: {
+  slot?: DbTemplateSlot;
+  newSlotDateTime?: { dayOfWeek: number; time: string };
+  instructors: DbInstructor[];
+  classes: { slug: string; title_tr: string }[];
+  onClose: () => void;
+  onSaved: () => void;
+}) {
+  const isNew = !slot;
+  const [status, setStatus] = useState<SlotStatus>(slot?.status ?? "open");
+  const [classSlug, setClassSlug] = useState<string>(slot?.class_slug ?? "");
+  const [instructorId, setInstructorId] = useState<string>(
+    slot?.instructor_id ?? instructors[0]?.id ?? "",
+  );
+  const [capacity, setCapacity] = useState<number>(slot?.capacity ?? 6);
+  const [notes, setNotes] = useState<string>(slot?.notes ?? "");
+  const [saving, setSaving] = useState(false);
+
+  const DAYS_LABEL = ["Pazar", "Pazartesi", "Salı", "Çarşamba", "Perşembe", "Cuma", "Cumartesi"];
+
+  async function save() {
+    if (!supabase) return;
+    setSaving(true);
+    const payload = {
+      status,
+      class_slug: classSlug || null,
+      instructor_id: instructorId || null,
+      capacity,
+      notes: notes || null,
+    };
+    if (isNew && newSlotDateTime) {
+      await supabase.from("template_slots").insert({
+        ...payload,
+        day_of_week: newSlotDateTime.dayOfWeek,
+        time: newSlotDateTime.time,
+        duration_min: 50,
+      });
+    } else if (slot) {
+      await supabase.from("template_slots").update(payload).eq("id", slot.id);
+    }
+    setSaving(false);
+    onSaved();
+  }
+
+  async function remove() {
+    if (!supabase || !slot) return;
+    if (!confirm("Bu şablon slotu silinsin mi?")) return;
+    await supabase.from("template_slots").delete().eq("id", slot.id);
+    onSaved();
+  }
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-foreground/40 p-4" onClick={onClose}>
+      <div
+        className="bg-background border border-foreground/20 max-w-md w-full p-8"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <h3 className="font-serif text-[1.4rem] tracking-[-0.02em]">
+          {isNew ? "Yeni Şablon Slotu" : "Şablon Slotu Düzenle"}
+        </h3>
+        <p className="text-foreground/60 text-sm mt-1">
+          {slot ? DAYS_LABEL[slot.day_of_week] : DAYS_LABEL[newSlotDateTime?.dayOfWeek ?? 0]} · {slot?.time?.slice(0, 5) ?? newSlotDateTime?.time}
+        </p>
+
+        <div className="mt-6 space-y-4">
+          <label className="block">
+            <span className="text-[0.7rem] uppercase tracking-[0.22em] text-vc-accent">DURUM</span>
+            <select
+              value={status}
+              onChange={(e) => setStatus(e.target.value as SlotStatus)}
+              className="mt-2 w-full bg-transparent border-b border-foreground/30 py-2 outline-none"
+            >
+              {Object.entries(SLOT_STATUS_LABEL).map(([k, v]) => (
+                <option key={k} value={k}>
+                  {v}
+                </option>
+              ))}
+            </select>
+          </label>
+
+          <label className="block">
+            <span className="text-[0.7rem] uppercase tracking-[0.22em] text-vc-accent">DERS TÜRÜ</span>
+            <select
+              value={classSlug}
+              onChange={(e) => setClassSlug(e.target.value)}
+              className="mt-2 w-full bg-transparent border-b border-foreground/30 py-2 outline-none"
+            >
+              <option value="">(yok)</option>
+              {classes.map((c) => (
+                <option key={c.slug} value={c.slug}>
+                  {c.title_tr}
+                </option>
+              ))}
+            </select>
+          </label>
+
+          <label className="block">
+            <span className="text-[0.7rem] uppercase tracking-[0.22em] text-vc-accent">EĞİTMEN</span>
+            <select
+              value={instructorId}
+              onChange={(e) => setInstructorId(e.target.value)}
+              className="mt-2 w-full bg-transparent border-b border-foreground/30 py-2 outline-none"
+            >
+              {instructors.map((i) => (
+                <option key={i.id} value={i.id}>
+                  {i.name}
+                </option>
+              ))}
+            </select>
+          </label>
+
+          <label className="block">
+            <span className="text-[0.7rem] uppercase tracking-[0.22em] text-vc-accent">KAPASİTE</span>
+            <input
+              type="number"
+              min={1}
+              max={20}
+              value={capacity}
+              onChange={(e) => setCapacity(Number(e.target.value))}
+              className="mt-2 w-full bg-transparent border-b border-foreground/30 py-2 outline-none"
+            />
+          </label>
+
+          <label className="block">
+            <span className="text-[0.7rem] uppercase tracking-[0.22em] text-vc-accent">NOT (opsiyonel)</span>
+            <textarea
+              value={notes}
+              onChange={(e) => setNotes(e.target.value)}
+              rows={2}
+              className="mt-2 w-full bg-transparent border-b border-foreground/30 py-2 outline-none resize-none"
+            />
+          </label>
         </div>
 
         <div className="mt-8 flex items-center justify-between gap-3">
