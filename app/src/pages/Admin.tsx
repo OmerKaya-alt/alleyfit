@@ -123,7 +123,7 @@ export default function Admin() {
   const isAuthorized = email && (ADMIN_EMAILS.includes(email) || dbAdminEmails.includes(email));
 
   if (!email || !isAuthorized) {
-    return <LoginScreen unauthorizedEmail={email} />;
+    return <LoginScreen unauthorizedEmail={email} allowedEmails={dbAdminEmails} />;
   }
 
   return (
@@ -172,7 +172,13 @@ export default function Admin() {
 /*  Auth — magic link login                                              */
 /* -------------------------------------------------------------------- */
 
-function LoginScreen({ unauthorizedEmail }: { unauthorizedEmail: string | null }) {
+function LoginScreen({
+  unauthorizedEmail,
+  allowedEmails,
+}: {
+  unauthorizedEmail: string | null;
+  allowedEmails: string[];
+}) {
   const [emailInput, setEmailInput] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
@@ -182,7 +188,8 @@ function LoginScreen({ unauthorizedEmail }: { unauthorizedEmail: string | null }
   /** E-posta admin listesinde mi? Değilse hata yazıp null döner. */
   function validEmail(): string | null {
     const trimmed = emailInput.trim().toLowerCase();
-    if (!ADMIN_EMAILS.includes(trimmed)) {
+    const isAllowed = ADMIN_EMAILS.includes(trimmed) || allowedEmails.includes(trimmed);
+    if (!isAllowed) {
       setError("Bu e-posta admin listesinde yok.");
       return null;
     }
