@@ -171,7 +171,7 @@ const NAV_ITEMS: NavItem[] = [
   { to: "/iletisim", key: "nav.contact" },
 ];
 
-const CTA_HREF = "/iletisim";
+const CTA_HREF = "/program";
 
 export default function Nav() {
   const { scrollY } = useScroll();

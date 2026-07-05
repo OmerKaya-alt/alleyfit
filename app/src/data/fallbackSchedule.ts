@@ -32,19 +32,19 @@ const open = (time: string): Tpl => ({
   time,
   status: "open",
   classSlug: null,
-  capacity: 6,
+  capacity: 1,
   booked: 0,
 });
 const priv = (time: string): Tpl => ({
   time,
-  status: "open",
+  status: "private",
   classSlug: "ozel",
   capacity: 1,
   booked: 0,
 });
 const couple = (time: string): Tpl => ({
   time,
-  status: "open",
+  status: "couple",
   classSlug: "cadillac",
   capacity: 2,
   booked: 0,

@@ -19,10 +19,10 @@ const dict = {
     "nav.about": "Hakkımızda",
     "nav.classes": "Dersler",
     "nav.studio": "Stüdyo",
-    "nav.program": "Program",
+    "nav.program": "Randevu",
     "nav.corporate": "Kurumsal",
     "nav.reviews": "Yorumlar",
-    "nav.contact": "İletişim",
+    "nav.contact": "Rezervasyon / İletişim",
     "cta.reserve": "REZERVASYON",
 
     // Studio hero + sections
@@ -229,10 +229,10 @@ const dict = {
     "nav.about": "About",
     "nav.classes": "Classes",
     "nav.studio": "Studio",
-    "nav.program": "Schedule",
+    "nav.program": "Appointment",
     "nav.corporate": "Corporate",
     "nav.reviews": "Reviews",
-    "nav.contact": "Contact",
+    "nav.contact": "Reservation / Contact",
     "cta.reserve": "BOOK NOW",
 
     // Studio

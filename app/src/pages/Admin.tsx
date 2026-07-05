@@ -685,6 +685,9 @@ function ScheduleTab() {
             setEditing(null);
             void loadWeek();
           }}
+          onRefreshWeek={() => {
+            void loadWeek();
+          }}
         />
       )}
       {creating && (
@@ -695,6 +698,9 @@ function ScheduleTab() {
           onClose={() => setCreating(null)}
           onSaved={() => {
             setCreating(null);
+            void loadWeek();
+          }}
+          onRefreshWeek={() => {
             void loadWeek();
           }}
         />
@@ -711,6 +717,7 @@ function SlotEditModal({
   classes,
   onClose,
   onSaved,
+  onRefreshWeek,
 }: {
   slot?: DbSlot;
   newSlotDateTime?: { date: string; time: string };
@@ -718,18 +725,34 @@ function SlotEditModal({
   classes: { slug: string; title_tr: string }[];
   onClose: () => void;
   onSaved: () => void;
+  onRefreshWeek?: () => void;
 }) {
   const isNew = !slot;
+
+  const defaultCapacity = (st: SlotStatus) => {
+    if (st === "private" || st === "open") return 1;
+    if (st === "couple") return 2;
+    if (st === "spinning") return 12;
+    return 6; // group_open, group_full
+  };
+
   const [status, setStatus] = useState<SlotStatus>(slot?.status ?? "open");
   const [classSlug, setClassSlug] = useState<string>(slot?.class_slug ?? "");
   const [instructorId, setInstructorId] = useState<string>(
     slot?.instructor_id ?? instructors[0]?.id ?? "",
   );
-  const [capacity, setCapacity] = useState<number>(slot?.capacity ?? 12);
+  const [capacity, setCapacity] = useState<number>(slot?.capacity ?? defaultCapacity(slot?.status ?? "open"));
   const [notes, setNotes] = useState<string>(slot?.notes ?? "");
   const [saving, setSaving] = useState(false);
   const [isRecurring, setIsRecurring] = useState(false);
   const [recurringWeeks, setRecurringWeeks] = useState(4);
+
+  // Automatically update capacity if it's a new slot and status changes
+  useEffect(() => {
+    if (isNew) {
+      setCapacity(defaultCapacity(status));
+    }
+  }, [status, isNew]);
 
   // Rezervasyon listesi states
   const [reservations, setReservations] = useState<DbReservation[]>([]);
@@ -767,7 +790,8 @@ function SlotEditModal({
       alert("Rezervasyon onaylanırken hata oluştu: " + error.message);
     } else {
       void loadReservations();
-      onSaved();
+      if (onRefreshWeek) onRefreshWeek();
+      else onSaved();
     }
   }
 
@@ -779,7 +803,8 @@ function SlotEditModal({
       alert("Rezervasyon silinirken hata oluştu: " + error.message);
     } else {
       void loadReservations();
-      onSaved();
+      if (onRefreshWeek) onRefreshWeek();
+      else onSaved();
     }
   }
 
@@ -798,7 +823,8 @@ function SlotEditModal({
       setNewMemberName("");
       setNewMemberPhone("");
       void loadReservations();
-      onSaved();
+      if (onRefreshWeek) onRefreshWeek();
+      else onSaved();
     }
   }
 
@@ -1373,14 +1399,29 @@ function EditTemplateSlotModal({
   onSaved: () => void;
 }) {
   const isNew = !slot;
+
+  const defaultCapacity = (st: SlotStatus) => {
+    if (st === "private" || st === "open") return 1;
+    if (st === "couple") return 2;
+    if (st === "spinning") return 12;
+    return 6; // group_open, group_full
+  };
+
   const [status, setStatus] = useState<SlotStatus>(slot?.status ?? "open");
   const [classSlug, setClassSlug] = useState<string>(slot?.class_slug ?? "");
   const [instructorId, setInstructorId] = useState<string>(
     slot?.instructor_id ?? instructors[0]?.id ?? "",
   );
-  const [capacity, setCapacity] = useState<number>(slot?.capacity ?? 6);
+  const [capacity, setCapacity] = useState<number>(slot?.capacity ?? defaultCapacity(slot?.status ?? "open"));
   const [notes, setNotes] = useState<string>(slot?.notes ?? "");
   const [saving, setSaving] = useState(false);
+
+  // Automatically update capacity if it's a new slot and status changes
+  useEffect(() => {
+    if (isNew) {
+      setCapacity(defaultCapacity(status));
+    }
+  }, [status, isNew]);
 
   // Kalıcı Şablon Katılımcıları states
   const [reservations, setReservations] = useState<DbTemplateReservation[]>([]);
