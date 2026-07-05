@@ -557,6 +557,75 @@ function SlotEditModal({
   const [isRecurring, setIsRecurring] = useState(false);
   const [recurringWeeks, setRecurringWeeks] = useState(4);
 
+  // Rezervasyon listesi states
+  const [reservations, setReservations] = useState<DbReservation[]>([]);
+  const [loadingRes, setLoadingRes] = useState(false);
+  const [newMemberName, setNewMemberName] = useState("");
+  const [newMemberPhone, setNewMemberPhone] = useState("");
+
+  async function loadReservations() {
+    if (!supabase || !slot?.id) return;
+    setLoadingRes(true);
+    const { data } = await supabase
+      .from("reservations")
+      .select("*")
+      .eq("slot_id", slot.id)
+      .order("created_at");
+    setReservations((data as DbReservation[]) ?? []);
+    setLoadingRes(false);
+  }
+
+  useEffect(() => {
+    if (slot?.id) {
+      void loadReservations();
+    }
+  }, [slot]);
+
+  async function approveReservation(resId: string) {
+    if (!supabase) return;
+    const { error } = await supabase
+      .from("reservations")
+      .update({ status: "confirmed", confirmed_at: new Date().toISOString() })
+      .eq("id", resId);
+    if (error) {
+      alert("Rezervasyon onaylanırken hata oluştu: " + error.message);
+    } else {
+      void loadReservations();
+      onSaved();
+    }
+  }
+
+  async function cancelReservation(resId: string) {
+    if (!supabase) return;
+    if (!confirm("Bu rezervasyonu silmek istediğinize emin misiniz?")) return;
+    const { error } = await supabase.from("reservations").delete().eq("id", resId);
+    if (error) {
+      alert("Rezervasyon silinirken hata oluştu: " + error.message);
+    } else {
+      void loadReservations();
+      onSaved();
+    }
+  }
+
+  async function addReservation() {
+    if (!supabase || !slot?.id) return;
+    const { error } = await supabase.from("reservations").insert({
+      slot_id: slot.id,
+      member_name: newMemberName.trim(),
+      member_phone: newMemberPhone.trim() || null,
+      status: "confirmed",
+      confirmed_at: new Date().toISOString(),
+    });
+    if (error) {
+      alert("Katılımcı eklenirken hata oluştu: " + error.message);
+    } else {
+      setNewMemberName("");
+      setNewMemberPhone("");
+      void loadReservations();
+      onSaved();
+    }
+  }
+
   async function save() {
     if (!supabase) return;
     setSaving(true);
@@ -657,7 +726,7 @@ function SlotEditModal({
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-foreground/40 p-4" onClick={onClose}>
       <div
-        className="bg-background border border-foreground/20 max-w-md w-full p-8"
+        className="bg-background border border-foreground/20 max-w-md w-full p-8 max-h-[90vh] overflow-y-auto"
         onClick={(e) => e.stopPropagation()}
       >
         <h3 className="font-serif text-[1.4rem] tracking-[-0.02em]">
@@ -676,7 +745,7 @@ function SlotEditModal({
               className="mt-2 w-full bg-transparent border-b border-foreground/30 py-2 outline-none"
             >
               {Object.entries(SLOT_STATUS_LABEL).map(([k, v]) => (
-                <option key={k} value={k}>
+                <option key={k} value={k} className="bg-background text-foreground">
                   {v}
                 </option>
               ))}
@@ -690,9 +759,9 @@ function SlotEditModal({
               onChange={(e) => setClassSlug(e.target.value)}
               className="mt-2 w-full bg-transparent border-b border-foreground/30 py-2 outline-none"
             >
-              <option value="">(yok)</option>
+              <option value="" className="bg-background text-foreground">(yok)</option>
               {classes.map((c) => (
-                <option key={c.slug} value={c.slug}>
+                <option key={c.slug} value={c.slug} className="bg-background text-foreground">
                   {c.title_tr}
                 </option>
               ))}
@@ -707,7 +776,7 @@ function SlotEditModal({
               className="mt-2 w-full bg-transparent border-b border-foreground/30 py-2 outline-none"
             >
               {instructors.map((i) => (
-                <option key={i.id} value={i.id}>
+                <option key={i.id} value={i.id} className="bg-background text-foreground">
                   {i.name}
                 </option>
               ))}
@@ -760,7 +829,7 @@ function SlotEditModal({
                   className="mt-2 w-full bg-transparent border-b border-foreground/30 py-2 outline-none"
                 >
                   {[2, 3, 4, 6, 8, 12].map((num) => (
-                    <option key={num} value={num}>
+                    <option key={num} value={num} className="bg-background text-foreground">
                       {num} Hafta
                     </option>
                   ))}
@@ -769,6 +838,80 @@ function SlotEditModal({
             )}
           </div>
         </div>
+
+        {/* Katılımcılar Listesi ve Yönetimi */}
+        {slot && (
+          <div className="mt-6 pt-6 border-t border-foreground/10 space-y-4">
+            <h4 className="font-serif text-[1.1rem] tracking-[-0.01em]">Katılımcılar ({reservations.length}/{capacity})</h4>
+            
+            {loadingRes ? (
+              <p className="text-[0.7rem] text-foreground/50">Yükleniyor...</p>
+            ) : reservations.length === 0 ? (
+              <p className="text-[0.7rem] text-foreground/40 italic">Bu derse henüz kayıtlı katılımcı yok.</p>
+            ) : (
+              <div className="space-y-2 max-h-36 overflow-y-auto pr-1">
+                {reservations.map((res) => (
+                  <div key={res.id} className="flex items-center justify-between bg-foreground/5 p-2 text-[0.7rem] border border-foreground/10">
+                    <div>
+                      <span className="font-medium text-foreground">{res.member_name}</span>
+                      {res.member_phone && <span className="text-foreground/50 ml-1">({res.member_phone})</span>}
+                      <span className={cn(
+                        "ml-2 px-1 text-[0.55rem] uppercase tracking-[0.1em]",
+                        res.status === "confirmed" ? "bg-green-500/10 text-green-600" : "bg-yellow-500/10 text-yellow-600"
+                      )}>
+                        {res.status === "confirmed" ? "Onaylı" : "Bekliyor"}
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      {res.status === "pending" && (
+                        <button
+                          onClick={() => approveReservation(res.id)}
+                          className="text-[0.65rem] text-green-600 uppercase tracking-[0.1em] hover:underline"
+                        >
+                          Onayla
+                        </button>
+                      )}
+                      <button
+                        onClick={() => cancelReservation(res.id)}
+                        className="text-[0.65rem] text-destructive uppercase tracking-[0.1em] hover:underline"
+                      >
+                        Sil
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* Manuel Katılımcı Ekleme Formu */}
+            <div className="bg-foreground/5 p-3 space-y-2 border border-foreground/10">
+              <span className="text-[0.65rem] uppercase tracking-[0.15em] text-vc-accent font-semibold">Katılımcı Ekle</span>
+              <div className="grid grid-cols-2 gap-2">
+                <input
+                  type="text"
+                  placeholder="Adı Soyadı"
+                  value={newMemberName}
+                  onChange={(e) => setNewMemberName(e.target.value)}
+                  className="w-full bg-background border border-foreground/20 px-2 py-1 text-[0.7rem] outline-none"
+                />
+                <input
+                  type="text"
+                  placeholder="Telefon"
+                  value={newMemberPhone}
+                  onChange={(e) => setNewMemberPhone(e.target.value)}
+                  className="w-full bg-background border border-foreground/20 px-2 py-1 text-[0.7rem] outline-none"
+                />
+              </div>
+              <button
+                onClick={addReservation}
+                disabled={!newMemberName.trim()}
+                className="w-full bg-foreground text-background py-1.5 text-[0.65rem] uppercase tracking-[0.15em] hover:opacity-90 disabled:opacity-50 transition"
+              >
+                Derse Kaydet
+              </button>
+            </div>
+          </div>
+        )}
 
         <div className="mt-8 flex items-center justify-between gap-3">
           <button
@@ -1036,7 +1179,7 @@ function EditTemplateSlotModal({
               className="mt-2 w-full bg-transparent border-b border-foreground/30 py-2 outline-none"
             >
               {Object.entries(SLOT_STATUS_LABEL).map(([k, v]) => (
-                <option key={k} value={k}>
+                <option key={k} value={k} className="bg-background text-foreground">
                   {v}
                 </option>
               ))}
@@ -1050,9 +1193,9 @@ function EditTemplateSlotModal({
               onChange={(e) => setClassSlug(e.target.value)}
               className="mt-2 w-full bg-transparent border-b border-foreground/30 py-2 outline-none"
             >
-              <option value="">(yok)</option>
+              <option value="" className="bg-background text-foreground">(yok)</option>
               {classes.map((c) => (
-                <option key={c.slug} value={c.slug}>
+                <option key={c.slug} value={c.slug} className="bg-background text-foreground">
                   {c.title_tr}
                 </option>
               ))}
@@ -1067,7 +1210,7 @@ function EditTemplateSlotModal({
               className="mt-2 w-full bg-transparent border-b border-foreground/30 py-2 outline-none"
             >
               {instructors.map((i) => (
-                <option key={i.id} value={i.id}>
+                <option key={i.id} value={i.id} className="bg-background text-foreground">
                   {i.name}
                 </option>
               ))}
