@@ -102,4 +102,4 @@ export const reviewStats = {
 };
 
 export const GOOGLE_REVIEWS_URL =
-  "https://www.google.com/search?q=Alleyfit+Wellness+Studio+Yorumlar";
+  "https://www.google.com/search?sca_esv=3dd1c5d9088397af&sxsrf=APpeQnsW4z2L2QttEGsUdMqRwrctBGx1NQ:1783345220723&uds=AJ5uw1_a2D0D09lxm8gpKKOTUn4rJ7j7W4i9nAR4pE1i4jX9s_mkMfahuyyG03MMVo1Rb5kfwjGrXzxMph0pvHT4EBfhrqNFamcIHkprmoBoB3rC_R_Juxmixi-TzKE6dIToJ_rL1XzWvRXlxaVDSYIaZB1Vx_NVgQ&q=Alleyfit+Wellness+Studio+Yorumlar&si=APenkKm7iecQ4G6P-TsbSMFKIQtv3EFIqRAFw-i8uEbk55Z-_-65LBIIFbkpLCitjGV0z_dHudC00i_5AhTcaOoo47CxJojqWQm_CwpKwm0Lp5d0yc7SWOCMwa0hEtnxTzjiXL2UGK5fkXGa1vgj4RDGYfqECgyaGA%3D%3D&hl=tr-TR&sa=X&ved=2ahUKEwjYiJLTlr6VAxUr48kDHQCdEvgQ_4MLegQIRBAO&biw=1536&bih=730&dpr=1.25";
