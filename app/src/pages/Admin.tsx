@@ -75,35 +75,46 @@ export default function Admin() {
     let active = true;
 
     async function checkAuth() {
-      // 1) Session
-      const { data } = await supabase!.auth.getSession();
-      const currentEmail = data.session?.user.email?.toLowerCase() ?? null;
+      try {
+        // 1) Session
+        const { data } = await supabase!.auth.getSession();
+        const currentEmail = data.session?.user.email?.toLowerCase() ?? null;
 
-      // 2) Fetch dynamic admin emails from DB
-      const { data: dbAdmins } = await supabase!
-        .from("admin_emails")
-        .select("email");
+        // 2) Fetch dynamic admin emails from DB
+        const { data: dbAdmins } = await supabase!
+          .from("admin_emails")
+          .select("email");
 
-      if (!active) return;
+        if (!active) return;
 
-      const emailsList = (dbAdmins as { email: string }[])?.map((a) => a.email.toLowerCase()) ?? [];
-      setDbAdminEmails(emailsList);
-      setEmail(currentEmail);
-      setChecking(false);
+        const emailsList = (dbAdmins as { email: string }[])?.map((a) => a.email.toLowerCase()) ?? [];
+        setDbAdminEmails(emailsList);
+        setEmail(currentEmail);
+      } catch (err) {
+        console.error("Auth check error:", err);
+      } finally {
+        if (active) {
+          setChecking(false);
+        }
+      }
     }
 
     void checkAuth();
 
     const { data: sub } = supabase.auth.onAuthStateChange(async (_e, session) => {
-      const currentEmail = session?.user.email?.toLowerCase() ?? null;
-      const { data: dbAdmins } = await supabase!
-        .from("admin_emails")
-        .select("email");
-      const emailsList = (dbAdmins as { email: string }[])?.map((a) => a.email.toLowerCase()) ?? [];
+      try {
+        const currentEmail = session?.user.email?.toLowerCase() ?? null;
+        const { data: dbAdmins } = await supabase!
+          .from("admin_emails")
+          .select("email");
+        const emailsList = (dbAdmins as { email: string }[])?.map((a) => a.email.toLowerCase()) ?? [];
 
-      if (active) {
-        setDbAdminEmails(emailsList);
-        setEmail(currentEmail);
+        if (active) {
+          setDbAdminEmails(emailsList);
+          setEmail(currentEmail);
+        }
+      } catch (err) {
+        console.error("Auth state change error:", err);
       }
     });
 

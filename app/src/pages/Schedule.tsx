@@ -99,23 +99,29 @@ export default function Schedule() {
   const [reserveSlot, setReserveSlot] = useState<DbSlot | null>(null);
 
   async function loadSlots() {
-    if (!supabase) {
+    try {
+      if (!supabase) {
+        setSlots(FALLBACK_SLOTS);
+        return;
+      }
+      const today = localISODate();
+      const futureDate = new Date();
+      futureDate.setDate(futureDate.getDate() + 14);
+      const future = localISODate(futureDate);
+      const { data, error } = await supabase
+        .from("slots")
+        .select("*")
+        .gte("date", today)
+        .lte("date", future)
+        .order("date")
+        .order("time");
+      if (error) throw error;
+      const nextSlots = (data as DbSlot[]) ?? [];
+      setSlots(nextSlots.length > 0 ? mergeSlots(nextSlots, FALLBACK_SLOTS) : FALLBACK_SLOTS);
+    } catch (err) {
+      console.error("Error fetching slots from DB, falling back to template:", err);
       setSlots(FALLBACK_SLOTS);
-      return;
     }
-    const today = localISODate();
-    const futureDate = new Date();
-    futureDate.setDate(futureDate.getDate() + 14);
-    const future = localISODate(futureDate);
-    const { data } = await supabase
-      .from("slots")
-      .select("*")
-      .gte("date", today)
-      .lte("date", future)
-      .order("date")
-      .order("time");
-    const nextSlots = (data as DbSlot[]) ?? [];
-    setSlots(nextSlots.length > 0 ? mergeSlots(nextSlots, FALLBACK_SLOTS) : FALLBACK_SLOTS);
   }
 
   useEffect(() => {
@@ -126,11 +132,18 @@ export default function Schedule() {
     }
     let active = true;
     (async () => {
-      await loadSlots();
-      const { data: i } = await supabase!.from("instructors").select("*").eq("active", true);
-      if (!active) return;
-      setInstructors((i as DbInstructor[]) ?? []);
-      setLoading(false);
+      try {
+        await loadSlots();
+        const { data: i } = await supabase!.from("instructors").select("*").eq("active", true);
+        if (!active) return;
+        setInstructors((i as DbInstructor[]) ?? []);
+      } catch (err) {
+        console.error("Failed to load schedule data:", err);
+      } finally {
+        if (active) {
+          setLoading(false);
+        }
+      }
     })();
 
     const ch = supabase
