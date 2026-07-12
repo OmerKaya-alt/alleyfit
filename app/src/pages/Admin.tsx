@@ -134,7 +134,7 @@ export default function Admin() {
   const isAuthorized = email && (ADMIN_EMAILS.includes(email) || dbAdminEmails.includes(email));
 
   if (!email || !isAuthorized) {
-    return <LoginScreen unauthorizedEmail={email} allowedEmails={dbAdminEmails} />;
+    return <LoginScreen unauthorizedEmail={email} />;
   }
 
   return (
@@ -185,10 +185,8 @@ export default function Admin() {
 
 function LoginScreen({
   unauthorizedEmail,
-  allowedEmails,
 }: {
   unauthorizedEmail: string | null;
-  allowedEmails: string[];
 }) {
   const [emailInput, setEmailInput] = useState("");
   const [password, setPassword] = useState("");
@@ -196,12 +194,11 @@ function LoginScreen({
   const [linkSent, setLinkSent] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  /** E-posta admin listesinde mi? Değilse hata yazıp null döner. */
+  /** E-posta alanı geçerli mi? */
   function validEmail(): string | null {
     const trimmed = emailInput.trim().toLowerCase();
-    const isAllowed = ADMIN_EMAILS.includes(trimmed) || allowedEmails.includes(trimmed);
-    if (!isAllowed) {
-      setError("Bu e-posta admin listesinde yok.");
+    if (!trimmed) {
+      setError("Lütfen e-posta adresinizi girin.");
       return null;
     }
     return trimmed;
@@ -261,9 +258,20 @@ function LoginScreen({
         </p>
 
         {unauthorizedEmail ? (
-          <p className="mt-6 text-sm text-destructive">
-            “{unauthorizedEmail}” hesabı admin listesinde değil. Doğru hesapla giriş yap.
-          </p>
+          <div className="mt-6 p-4 bg-destructive/10 border border-destructive/20 text-destructive text-sm rounded-md flex flex-col gap-3">
+            <p>“{unauthorizedEmail}” hesabı admin yetkisine sahip değil.</p>
+            <button
+              onClick={async () => {
+                if (supabase) {
+                  await supabase.auth.signOut();
+                  window.location.reload();
+                }
+              }}
+              className="text-xs uppercase tracking-wider font-semibold underline text-left hover:text-destructive/80 transition"
+            >
+              Farklı bir hesapla giriş yap / Çıkış Yap
+            </button>
+          </div>
         ) : null}
 
         <form onSubmit={handlePasswordLogin} className="mt-8 space-y-4">
