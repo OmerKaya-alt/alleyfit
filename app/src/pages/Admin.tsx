@@ -190,7 +190,25 @@ export default function Admin() {
 }
 
 /* -------------------------------------------------------------------- */
-/*  Auth — magic link login                                              */
+/*  Helper — Promise Timeout                                             */
+/* -------------------------------------------------------------------- */
+function withTimeout<T>(promise: Promise<T>, ms = 6000): Promise<T> {
+  return new Promise<T>((resolve, reject) => {
+    const timer = setTimeout(() => reject(new Error("ZAMAN_ASIMI")), ms);
+    promise
+      .then((res) => {
+        clearTimeout(timer);
+        resolve(res);
+      })
+      .catch((err) => {
+        clearTimeout(timer);
+        reject(err);
+      });
+  });
+}
+
+/* -------------------------------------------------------------------- */
+/*  Auth — login screen                                                  */
 /* -------------------------------------------------------------------- */
 
 function LoginScreen({
@@ -223,16 +241,27 @@ function LoginScreen({
     const trimmed = validEmail();
     if (!trimmed) return;
     setLoading(true);
-    const { error: err } = await supabase.auth.signInWithPassword({
-      email: trimmed,
-      password,
-    });
-    setLoading(false);
-    if (err) {
-      setError("E-posta veya şifre hatalı.");
-      return;
+    try {
+      const { error: err } = await withTimeout(
+        supabase.auth.signInWithPassword({
+          email: trimmed,
+          password,
+        }),
+        6000
+      );
+      if (err) {
+        setError("E-posta veya şifre hatalı.");
+      }
+    } catch (err: any) {
+      console.error("Login attempt failed:", err);
+      if (err.message === "ZAMAN_ASIMI") {
+        setError("Giriş isteği zaman aşımına uğradı. Lütfen internet bağlantınızı, VPN veya reklam engelleyicinizi kontrol edin.");
+      } else {
+        setError("Giriş yapılamadı. Lütfen bilgilerinizi ve internetinizi kontrol edin.");
+      }
+    } finally {
+      setLoading(false);
     }
-    // Başarılı → onAuthStateChange panel açar.
   }
 
   // Magic-link — e-posta ile giriş bağlantısı (yedek yöntem).
@@ -242,16 +271,29 @@ function LoginScreen({
     const trimmed = validEmail();
     if (!trimmed) return;
     setLoading(true);
-    const { error: err } = await supabase.auth.signInWithOtp({
-      email: trimmed,
-      options: { emailRedirectTo: window.location.origin + "/admin" },
-    });
-    setLoading(false);
-    if (err) {
-      setError(err.message);
-      return;
+    try {
+      const { error: err } = await withTimeout(
+        supabase.auth.signInWithOtp({
+          email: trimmed,
+          options: { emailRedirectTo: window.location.origin + "/admin" },
+        }),
+        6000
+      );
+      if (err) {
+        setError(err.message);
+        return;
+      }
+      setLinkSent(true);
+    } catch (err: any) {
+      console.error("Magic link attempt failed:", err);
+      if (err.message === "ZAMAN_ASIMI") {
+        setError("Bağlantı isteği zaman aşımına uğradı. Güvenlik duvarınızı veya internetinizi kontrol edin.");
+      } else {
+        setError("Bağlantı gönderilemedi. Lütfen internetinizi kontrol edin.");
+      }
+    } finally {
+      setLoading(false);
     }
-    setLinkSent(true);
   }
 
   return (
