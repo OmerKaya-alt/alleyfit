@@ -66,7 +66,7 @@ export default function Admin() {
   const [checking, setChecking] = useState(true);
   const [tab, setTab] = useState<Tab>("schedule");
 
-  // Auth oturumunu kontrol et
+  // 1) Auth oturumunu ve email'i takip et
   useEffect(() => {
     if (!supabase) {
       setChecking(false);
@@ -74,65 +74,60 @@ export default function Admin() {
     }
     let active = true;
 
-    // Safety timeout to force-disable checking state if queries hang
-    const safetyTimeout = setTimeout(() => {
-      if (active) {
-        console.warn("Admin auth check timed out, forcing render");
-        setChecking(false);
-      }
-    }, 3000);
-
-    async function checkAuth() {
+    async function initAuth() {
       try {
-        // 1) Session
         const { data } = await supabase!.auth.getSession();
-        const currentEmail = data.session?.user.email?.toLowerCase() ?? null;
-
-        // 2) Fetch dynamic admin emails from DB
-        const { data: dbAdmins } = await supabase!
-          .from("admin_emails")
-          .select("email");
-
-        if (!active) return;
-
-        const emailsList = (dbAdmins as { email: string }[])?.map((a) => a.email.toLowerCase()) ?? [];
-        setDbAdminEmails(emailsList);
-        setEmail(currentEmail);
+        if (active) {
+          setEmail(data.session?.user.email?.toLowerCase() ?? null);
+        }
       } catch (err) {
-        console.error("Auth check error:", err);
+        console.error("Auth init error:", err);
       } finally {
         if (active) {
-          clearTimeout(safetyTimeout);
           setChecking(false);
         }
       }
     }
 
-    void checkAuth();
+    void initAuth();
 
-    const { data: sub } = supabase.auth.onAuthStateChange(async (_e, session) => {
-      try {
-        const currentEmail = session?.user.email?.toLowerCase() ?? null;
-        const { data: dbAdmins } = await supabase!
-          .from("admin_emails")
-          .select("email");
-        const emailsList = (dbAdmins as { email: string }[])?.map((a) => a.email.toLowerCase()) ?? [];
-
-        if (active) {
-          setDbAdminEmails(emailsList);
-          setEmail(currentEmail);
-        }
-      } catch (err) {
-        console.error("Auth state change error:", err);
+    const { data: sub } = supabase.auth.onAuthStateChange((_e, session) => {
+      const currentEmail = session?.user.email?.toLowerCase() ?? null;
+      if (active) {
+        setEmail(currentEmail);
       }
     });
 
     return () => {
       active = false;
-      clearTimeout(safetyTimeout);
       sub.subscription.unsubscribe();
     };
   }, []);
+
+  // 2) Email değiştiğinde admin listesini çek (deadlock riskini sıfırlar)
+  useEffect(() => {
+    if (!supabase) return;
+    let active = true;
+
+    async function fetchAdmins() {
+      try {
+        const { data: dbAdmins } = await supabase!
+          .from("admin_emails")
+          .select("email");
+        if (!active) return;
+        const emailsList = (dbAdmins as { email: string }[])?.map((a) => a.email.toLowerCase()) ?? [];
+        setDbAdminEmails(emailsList);
+      } catch (err) {
+        console.error("Failed to fetch admin list:", err);
+      }
+    }
+
+    void fetchAdmins();
+
+    return () => {
+      active = false;
+    };
+  }, [email]);
 
   if (!supabaseConfigured) {
     return <BackendNotConfigured />;
