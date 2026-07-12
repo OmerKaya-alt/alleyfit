@@ -131,6 +131,16 @@ export default function Schedule() {
       return;
     }
     let active = true;
+
+    // Safety timeout to force-disable loading state if queries hang
+    const safetyTimeout = setTimeout(() => {
+      if (active) {
+        console.warn("Schedule load timed out, forcing fallback view");
+        setSlots(FALLBACK_SLOTS);
+        setLoading(false);
+      }
+    }, 3000);
+
     (async () => {
       try {
         await loadSlots();
@@ -141,6 +151,7 @@ export default function Schedule() {
         console.error("Failed to load schedule data:", err);
       } finally {
         if (active) {
+          clearTimeout(safetyTimeout);
           setLoading(false);
         }
       }
@@ -155,6 +166,7 @@ export default function Schedule() {
 
     return () => {
       active = false;
+      clearTimeout(safetyTimeout);
       void supabase!.removeChannel(ch);
     };
   }, []);

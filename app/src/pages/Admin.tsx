@@ -74,6 +74,14 @@ export default function Admin() {
     }
     let active = true;
 
+    // Safety timeout to force-disable checking state if queries hang
+    const safetyTimeout = setTimeout(() => {
+      if (active) {
+        console.warn("Admin auth check timed out, forcing render");
+        setChecking(false);
+      }
+    }, 3000);
+
     async function checkAuth() {
       try {
         // 1) Session
@@ -94,6 +102,7 @@ export default function Admin() {
         console.error("Auth check error:", err);
       } finally {
         if (active) {
+          clearTimeout(safetyTimeout);
           setChecking(false);
         }
       }
@@ -120,6 +129,7 @@ export default function Admin() {
 
     return () => {
       active = false;
+      clearTimeout(safetyTimeout);
       sub.subscription.unsubscribe();
     };
   }, []);
